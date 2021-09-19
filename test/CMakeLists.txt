@@ -1,0 +1,39 @@
+set(_doxypress_dir ${PROJECT_SOURCE_DIR}/cmake)
+#include(../cmake/AddDocs.cmake)
+
+# _doxypress_project_load(DoxypressTest1.json)
+function(assert_same str1 str2)
+    if (NOT "${str1}" STREQUAL "${str2}")
+        message(SEND_ERROR "`${str1}` is not the same as `${str2}`")
+    endif ()
+endfunction()
+
+function(assert_list_contains list1 el)
+    if (NOT "${el}" IN_LIST list1)
+        message(SEND_ERROR "${el} is not contained in ${list1}")
+    endif ()
+endfunction()
+
+add_executable(main src/main.cc)
+set_target_properties(main PROPERTIES EXCLUDE_FROM_ALL 1)
+target_include_directories(main PUBLIC include include5)
+
+find_package(Doxygen)
+
+#add_custom_command(
+#        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/DoxypressCMake.json
+#        DEPENDS ${PROJECT_SOURCE_DIR}/test/doc/doxypress.json
+#        COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/proto.cmake)
+
+#add_custom_target(prepare_doxyfile DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/DoxypressCMake.json)
+#doxypress_add_docs(INPUT_TARGET main)
+
+if (NOT DEFINED DOXYGEN_SKIP_TEST OR NOT DOXYGEN_SKIP_TEST)
+    message(STATUS "Running tests...")
+    set(DOXYGEN_LOG_LEVEL WARN)
+    include(cmake/TestTPA.cmake)
+    include(cmake/TestCreateTargets.cmake)
+    include(cmake/TestParams.cmake)
+    #include(cmake/TestAddDocs.cmake)
+    #include(TestFindAddDocs.cmake)
+endif()
