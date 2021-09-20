@@ -152,7 +152,7 @@ function(_doxygen_add_target _project_file _updated_project_file _target_name)
     add_custom_command(
             OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_updated_project_file}"
             DEPENDS "${_project_file}"
-            COMMAND ${CMAKE_COMMAND} -D_new_args=\"${_new_args}\" -P ${_doxygen_dir}/proto.cmake)
+            COMMAND ${CMAKE_COMMAND} -Dproject_dir="${CMAKE_CURRENT_SOURCE_DIR}" -D_new_args=\"${_new_args}\" -P ${_doxygen_dir}/proto.cmake)
 
     add_custom_target(${_target_name}.prepare_doxyfile
             DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${_updated_project_file}")

@@ -171,6 +171,9 @@ function(test_latex_find_package)
     TPA_clear_scope()
 endfunction()
 
+#set(DOXYGEN_LOG_LEVEL DEBUG)
+set(doxygen.project.dir "${CMAKE_CURRENT_SOURCE_DIR}")
+
 test_input_flags_1()
 test_input_flags_2()
 test_input_directories_1()

@@ -97,7 +97,7 @@ function(_doxygen_update_project_file _file_name _out_var)
     set(_result "")
     if (NOT IS_ABSOLUTE ${_file_name})
         get_filename_component(_result
-                "${_file_name}" ABSOLUTE BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+                "${_file_name}" ABSOLUTE BASE_DIR "${doxygen.project.dir}")
         set(${_out_var} "${_result}" PARENT_SCOPE)
     else()
         set(${_out_var} "${_file_name}" PARENT_SCOPE)
@@ -136,9 +136,9 @@ endfunction()
 ##############################################################################
 function(_doxygen_set_warn_format _out_var)
     if ("${CMAKE_BUILD_TOOL}" MATCHES "(msdev|devenv)")
-        set(${_out_var} [[$file($line) : $text]] PARENT_SCOPE)
+        set(${_out_var} [[$$file($line) : $$text]] PARENT_SCOPE)
     else ()
-        set(${_out_var} [[$file:$line: $text]] PARENT_SCOPE)
+        set(${_out_var} [[$$file:$line: $$text]] PARENT_SCOPE)
     endif ()
 endfunction()
 
@@ -180,7 +180,7 @@ function(_doxygen_update_input_source _paths _out_var)
             if (NOT IS_ABSOLUTE "${_path}")
                 get_filename_component(_path
                         "${_path}" ABSOLUTE
-                        BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+                        BASE_DIR "${doxygen.project.dir}")
             endif ()
             list(APPEND _inputs "${_path}")
         endforeach ()
@@ -300,7 +300,7 @@ endfunction()
 ##############################################################################
 function(_doxygen_set_example_source _out_var)
     _doxygen_find_directory(
-            "${CMAKE_CURRENT_SOURCE_DIR}"
+            "${doxygen.project.dir}"
             "example;examples"
             _example_path
     )
