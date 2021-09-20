@@ -94,8 +94,12 @@ endfunction()
 # needed, and puts the result into ``_out_var``. Does nothing otherwise.
 ##############################################################################
 function(_doxygen_update_project_file _file_name _out_var)
+    if ("${_file_name}" STREQUAL "")
+        set(${_out_var} "" PARENT_SCOPE)
+        return()
+    endif()
     set(_result "")
-    if (NOT IS_ABSOLUTE ${_file_name})
+    if (NOT IS_ABSOLUTE "${_file_name}")
         get_filename_component(_result
                 "${_file_name}" ABSOLUTE BASE_DIR "${doxygen.project.dir}")
         set(${_out_var} "${_result}" PARENT_SCOPE)
@@ -136,9 +140,9 @@ endfunction()
 ##############################################################################
 function(_doxygen_set_warn_format _out_var)
     if ("${CMAKE_BUILD_TOOL}" MATCHES "(msdev|devenv)")
-        set(${_out_var} [[$$file($line) : $$text]] PARENT_SCOPE)
+        set(${_out_var} [[$file($line) : $text]] PARENT_SCOPE)
     else ()
-        set(${_out_var} [[$$file:$line: $$text]] PARENT_SCOPE)
+        set(${_out_var} [[$file:$line: $text]] PARENT_SCOPE)
     endif ()
 endfunction()
 
@@ -185,7 +189,7 @@ function(_doxygen_update_input_source _paths _out_var)
             list(APPEND _inputs "${_path}")
         endforeach ()
     else ()
-        TPA_get("INPUT_TARGET" _target)
+        _doxygen_get("INPUT_TARGET" _target)
         if (TARGET ${_target})
             get_target_property(_inputs
                     "${_target}"
@@ -323,7 +327,7 @@ endfunction()
 # Puts the result into ``_out_var``.
 ##############################################################################
 function(_doxygen_set_target_name _out_var)
-    TPA_get(INPUT_TARGET _input_target)
+    _doxygen_get(INPUT_TARGET _input_target)
     if (_input_target STREQUAL "")
         set(${_out_var} "${PROJECT_NAME}.doxygen" PARENT_SCOPE)
     else()
@@ -344,7 +348,7 @@ endfunction()
 # Otherwise, it's set to ``true``.
 ##############################################################################
 macro(_doxygen_update_generate_latex _generate_latex _out_var)
-    if (${_generate_latex})
+    if ("${_generate_latex}" STREQUAL YES)
         if (NOT DEFINED LATEX_FOUND)
             _doxygen_log(INFO "LaTex files requested, importing LATEX...")
             find_package(LATEX QUIET OPTIONAL_COMPONENTS MAKEINDEX PDFLATEX)

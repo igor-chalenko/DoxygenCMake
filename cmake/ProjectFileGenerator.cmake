@@ -51,172 +51,6 @@ unset(IN_OVERWRITE)
 
 ##############################################################################
 #.rst:
-# .. cmake:command:: _doxygen_input_option
-#
-#  ..  code-block:: cmake
-#
-#    _doxygen_input_option(_name
-#                 [SETTER <function name>]
-#                 [UPDATER <function name>]
-#                 [DEFAULT <value>])
-#
-# Attaches read/write logic to a given input option ``_name``. Declarations made
-# using this function are interpreted later by
-# :cmake:command:`_doxygen_inputs_parse`. The following arguments are
-# recognized:
-#
-# * ``DEFAULT``
-#
-#   If the input option was not set in either ``ARGN``, setter, or updater,
-#   it is set to this value.
-#
-# * ``SETTER``
-#
-#   A function with this name is called if the input option's value is
-#   empty. The setter's output variable holds the option's new value.
-#
-# * ``UPDATER``
-#
-#   A function with this name is called if the current value of the option
-#   is not empty. The current value is given as an argument. The output variable
-#   holds the option's new value.
-##############################################################################
-function(_doxygen_input_option _name)
-    set(_options "")
-    set(_one_value_args SETTER UPDATER DEFAULT)
-    set(_multi_value_args "")
-    cmake_parse_arguments(IN
-            "${_options}"
-            "${_one_value_args}"
-            "${_multi_value_args}"
-            "${ARGN}")
-
-    TPA_append(option_args ${_name})
-
-    if (DEFINED IN_SETTER)
-        TPA_set(${_name}_SETTER ${IN_SETTER})
-    endif ()
-    if (DEFINED IN_UPDATER)
-        TPA_set(${_name}_UPDATER ${IN_UPDATER})
-    endif ()
-    if (DEFINED IN_DEFAULT)
-        TPA_set(${_name}_DEFAULT ${IN_DEFAULT})
-    endif ()
-endfunction()
-
-##############################################################################
-#.rst:
-# .. cmake:command:: _doxygen_input_string
-#
-#  ..  code-block:: cmake
-#
-#    _doxygen_input_string(_name
-#                 [SETTER <function name>]
-#                 [UPDATER <function name>]
-#                 [DEFAULT <value>])
-#
-# Attaches read/write logic to a given input single-value parameter ``_name``.
-# Declarations made using this function are interpreted later by
-# ``_doxygen_inputs_parse``. The following arguments are recognized:
-# * ``DEFAULT``
-#
-#   If the input multi-value parameter was not set in either ``ARGN``, setter,
-#   or updater, it is set to this value.
-#
-# * ``SETTER``
-#
-#   A function with this name is called if the input parameter's value is
-#   empty. The setter's output variable holds the parameter's new value.
-#
-# * ``UPDATER``
-#
-#   A function with this name is called if the current value of the parameter
-#   is not empty. The current value is given as an argument. The output variable
-#   holds the parameter's new value.
-##############################################################################
-function(_doxygen_input_string _name)
-    set(_one_value_args SETTER UPDATER DEFAULT)
-    set(_multi_value_args "")
-    cmake_parse_arguments(IN
-            "${_options}"
-            "${_one_value_args}"
-            "${_multi_value_args}"
-            "${ARGN}")
-
-    TPA_get("one_value_args" _one_value_args)
-    list(APPEND _one_value_args ${_name})
-    TPA_set("one_value_args" "${_one_value_args}")
-
-    if (DEFINED IN_SETTER)
-        TPA_set(${_name}_SETTER ${IN_SETTER})
-    endif ()
-    if (DEFINED IN_UPDATER)
-        TPA_set(${_name}_UPDATER ${IN_UPDATER})
-    endif ()
-    if (DEFINED IN_DEFAULT)
-        TPA_set(${_name}_DEFAULT ${IN_DEFAULT})
-    endif ()
-endfunction()
-
-##############################################################################
-#.rst:
-# .. cmake:command:: _doxygen_input_list
-#
-#  ..  code-block:: cmake
-#
-#    _doxygen_input_list(_name
-#                 [SETTER <function name>]
-#                 [UPDATER <function name>]
-#                 [DEFAULT <value>])
-#
-# Attaches read/write logic to a given input multi-value parameter ``_name``.
-# Declarations made using this function are interpreted later by
-# :cmake:command:``_doxygen_inputs_parse``. The following arguments are
-# recognized:
-#
-# * ``DEFAULT``
-#
-#   If the input multi-value parameter was not set in either ``ARGN``, setter,
-#   or updater, it is set to this value.
-#
-# * ``SETTER``
-#
-#   A function with this name is called if the input parameter's value is
-#   empty. The setter's output variable holds the parameter's new value.
-#
-# * ``UPDATER``
-#
-#   A function with this name is called if the current value of the parameter
-#   is not empty. The current value is given as an argument. The output variable
-#   holds the parameter's new value.
-##############################################################################
-function(_doxygen_input_list _name)
-    set(_options "")
-    set(_one_value_args SETTER UPDATER DEFAULT)
-    set(_multi_value_args "")
-    cmake_parse_arguments(IN
-            "${_options}"
-            "${_one_value_args}"
-            "${_multi_value_args}"
-            "${ARGN}")
-
-    TPA_get("multi_value_args" _multi_value_args)
-    list(APPEND _multi_value_args ${_name})
-    TPA_set("multi_value_args" "${_multi_value_args}")
-
-    if (DEFINED IN_SETTER)
-        TPA_set(${_name}_SETTER ${IN_SETTER})
-    endif ()
-    if (DEFINED IN_UPDATER)
-        TPA_set(${_name}_UPDATER ${IN_UPDATER})
-    endif ()
-    if (DEFINED IN_DEFAULT)
-        TPA_set(${_name}_DEFAULT ${IN_DEFAULT})
-    endif ()
-endfunction()
-
-##############################################################################
-#.rst:
 # .. cmake:command:: _doxygen_inputs_parse
 #
 #  ..  code-block:: cmake
@@ -247,6 +81,12 @@ function(_doxygen_parse_input _out_var _property)
     else()
         set(_value "${DOXYGEN_${_property}}")
     endif()
+    if (${_property} IN_LIST _option_args)
+        if (_value STREQUAL NO)
+            _doxygen_log(DEBUG "erase the non-option ${_property}")
+            set(_value "")
+        endif()
+    endif()
     set(${_out_var} "${_value}" PARENT_SCOPE)
 
     #foreach (_option ${_option_args})
@@ -258,60 +98,6 @@ function(_doxygen_parse_input _out_var _property)
     #foreach (_list ${_multi_value_args})
     #    _doxygen_update_input_parameter(${_list} "${DOXYGEN_${_list}}")
     #endforeach ()
-endfunction()
-
-##############################################################################
-#.rst:
-# .. cmake:command:: _doxygen_update_input_parameter
-#
-#  ..  code-block:: cmake
-#
-#    _doxygen_update_input_parameter(_name _value)
-#
-# Updates value of an input parameter ``_name`` based on the logic defined
-# by previous calls to the functions :cmake:command:`_doxygen_input_string`,
-# :cmake:command:`_doxygen_input_option`, and
-# :cmake:command:`_doxygen_input_list`. ``_value`` is the initial value of
-# this parameter, given to :ref:`doxygen_add_docs`.
-##############################################################################
-function(_doxygen_update_input_parameter _name _value)
-    TPA_get("${_name}_UPDATER" _updater)
-    TPA_get("${_name}_SETTER" _setter)
-    TPA_get("${_name}_DEFAULT" _default)
-
-    # convert CMake booleans to JSON's
-    # todo remove?
-    if ("${_value}" STREQUAL "TRUE")
-        set(_value YES)
-    endif ()
-    if ("${_value}" STREQUAL "FALSE")
-        set(_value NO)
-    endif ()
-
-    TPA_get(doxygen.updatable.properties _updatable)
-    if (_value STREQUAL "")
-        if (_setter)
-            _doxygen_call(_doxygen_${_setter} _value)
-        endif ()
-        if (NOT _value STREQUAL "")
-            if (_updater)
-                _doxygen_call(_doxygen_${_updater} "${_value}" _value)
-            endif ()
-        endif ()
-        if (_value STREQUAL "")
-            # if no default, nothing happens
-            if (NOT _default STREQUAL "")
-                set(_value "${_default}")
-            endif ()
-        endif ()
-    else ()
-        if (_updater)
-            _doxygen_log(DEBUG "[input] before updater ${_name} = ${_value}")
-            _doxygen_call(_doxygen_${_updater} "${_value}" _value)
-        endif ()
-    endif ()
-    _doxygen_log(DEBUG "[input] ${_name} = ${_value}")
-    TPA_set(${_name} "${_value}")
 endfunction()
 
 ##############################################################################
@@ -451,24 +237,25 @@ function(_doxygen_update_path _path)
             set(_value "${_project_value}")
         endif()
 
-        _doxygen_log(DEBUG "before applying updater: ${_path} = ${_value}")
+        #_doxygen_log(DEBUG "before applying updater: ${_path} = ${_value}")
         _doxygen_property_apply_updater(${_path}
                 "${_updater}"
                 "${_value}"
                 _value)
-        _doxygen_log(DEBUG "before applying default: ${_path} = ${_value}")
+        #_doxygen_log(DEBUG "before applying default: ${_path} = ${_value}")
         _doxygen_property_apply_default(${_path}
                 "${_default}"
                 "${_value}"
                 "${_input_value}"
                 _value)
-        _doxygen_log(DEBUG "after applying default: ${_path} = ${_value}")
+        #_doxygen_log(DEBUG "after applying default: ${_path} = ${_value}")
 
         #_doxygen_set(${_path} "${_value}")
         #if (_input_param)
         #    TPA_set(${_input_param} "${_value}")
         # endif ()
     else()
+        #_doxygen_log(DEBUG "before applying updater: _input_value of ${_path} = ${_input_value}")
         set(_value "${_input_value}")
         _doxygen_property_apply_updater(${_path}
                 "${_updater}"
@@ -503,9 +290,6 @@ function(_doxygen_property_apply_setter _path _name _out_var)
             # call setter
             _doxygen_log(DEBUG "call setter ${_name}")
             _doxygen_call(_doxygen_${_name} _new_value)
-            if (NOT _new_value STREQUAL "")
-                _doxygen_action(${_path} setter "${_new_value}")
-            endif ()
             set(${_out_var} ${_new_value} PARENT_SCOPE)
         endif ()
     endif ()
@@ -533,9 +317,6 @@ function(_doxygen_property_apply_updater _property _name _value _out_var)
         # call updater
         _doxygen_log(DEBUG "call updater ${_name}(${_value})")
         _doxygen_call(_doxygen_${_name} "${_value}" _new_value)
-        if (NOT _new_value STREQUAL "")
-            _doxygen_action(${_property} updater "${_new_value}")
-        endif ()
         set(${_out_var} "${_new_value}" PARENT_SCOPE)
     endif ()
 endfunction()
@@ -566,15 +347,12 @@ endfunction()
 ##############################################################################
 function(_doxygen_property_apply_default _property
         _default _value _input_value _out_var)
-    _doxygen_log(DEBUG "[_doxygen_property_apply_default(${_property})] _default = ${_default}")
     if (NOT _default STREQUAL "")
         TPA_get(${_property}_OVERWRITE _overwrite)
-        _doxygen_log(DEBUG "[_doxygen_property_apply_default(${_property})] overwrite = ${_property}_OVERWRITE")
         if (NOT _input_value STREQUAL "")
             set(_overwrite false)
         endif ()
         if (_value STREQUAL "" OR _overwrite)
-            #_doxygen_action(${_property} default "${_default}")
             set(${_out_var} "${_default}" PARENT_SCOPE)
         endif ()
     endif ()
@@ -596,32 +374,11 @@ endfunction()
 function(_doxygen_property_read_input _out_var _path)
     _doxygen_parse_input(_input_value ${_path} ${ARGN})
 
-    #_doxygen_action(${_path} input "${_input_value}")
     set(${_out_var} "${_input_value}" PARENT_SCOPE)
 endfunction()
 
 # todo rename
 function(_doxygen_inputs_parse)
-    TPA_get("option_args" _option_args)
-    TPA_get("one_value_args" _one_value_args)
-    TPA_get("multi_value_args" _multi_value_args)
-
-    cmake_parse_arguments(DOXYGEN
-            "${_option_args}"
-            "${_one_value_args}"
-            "${_multi_value_args}"
-            "${ARGN}")
-
-    foreach (_option ${_option_args})
-        _doxygen_update_input_parameter(${_option} "${DOXYGEN_${_option}}")
-    endforeach ()
-    foreach (_arg ${_one_value_args})
-        _doxygen_update_input_parameter(${_arg} "${DOXYGEN_${_arg}}")
-    endforeach ()
-    foreach (_list ${_multi_value_args})
-        _doxygen_update_input_parameter(${_list} "${DOXYGEN_${_list}}")
-    endforeach ()
-
     TPA_get(doxygen.updatable.properties _updatable_paths)
 
     foreach (_path ${_updatable_paths})

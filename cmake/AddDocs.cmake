@@ -246,7 +246,7 @@ function(doxygen_add_docs)
     _doxygen_inputs_parse(${ARGN})
 
     # get the project file name
-    TPA_get(PROJECT_FILE _project_file)
+    _doxygen_get(PROJECT_FILE _project_file)
 
     _doxygen_output_project_file_name(${_project_file} _updated_project_file)
 
@@ -269,7 +269,7 @@ function(doxygen_prepare_doxyfile)
     _doxygen_inputs_parse(${ARGN})
 
     # get the project file name
-    TPA_get(PROJECT_FILE _project_file)
+    _doxygen_get(PROJECT_FILE _project_file)
     # update project file
     _doxygen_project_update(_updated_project_file "${_project_file}" ${ARGN})
     # clear up the TPA scope created by this function

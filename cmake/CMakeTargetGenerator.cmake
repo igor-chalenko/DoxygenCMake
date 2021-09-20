@@ -71,7 +71,7 @@ function(_doxygen_add_targets _project_file _updated_project_file)
     _doxygen_assert_not_empty("${_project_file}")
     _doxygen_assert_not_empty("${_updated_project_file}")
 
-    TPA_get(TARGET_NAME _target_name)
+    _doxygen_get(TARGET_NAME _target_name)
     if (NOT TARGET "${_target_name}")
         _doxygen_add_target("${_project_file}"
                 "${_updated_project_file}"
@@ -180,7 +180,7 @@ endfunction()
 # * ``_target_name`` the name of the target to add commands to
 ##############################################################################
 function(_doxygen_add_pdf_commands _target_name)
-    TPA_get(GENERATE_PDF _pdf)
+    _doxygen_get(GENERATE_PDF _pdf)
     _doxygen_get(OUTPUT_DIRECTORY _output_dir)
 
     if (_pdf)
@@ -223,7 +223,7 @@ function(_doxygen_add_open_targets _name_prefix)
     _doxygen_get(OUTPUT_DIRECTORY _output_dir)
     _doxygen_get(GENERATE_HTML _generate_html)
     _doxygen_get(GENERATE_LATEX _generate_latex)
-    TPA_get(GENERATE_PDF _generate_pdf)
+    _doxygen_get(GENERATE_PDF _generate_pdf)
 
     if (WIN32)
         set(DOXYGEN_LAUNCHER_COMMAND start)
@@ -303,7 +303,7 @@ endfunction()
 ##############################################################################
 function(_doxygen_install_docs)
     _doxygen_get(general.output-dir _output_dir)
-    TPA_get(INSTALL_COMPONENT _component)
+    _doxygen_get(INSTALL_COMPONENT _component)
 
     if (NOT DEFINED CMAKE_INSTALL_DOCDIR)
         set(CMAKE_INSTALL_DOCDIR "${CMAKE_INSTALL_PREFIX}")
@@ -349,7 +349,7 @@ function(_doxygen_list_outputs _option _out_var)
     _doxygen_get(output-xml.generate-xml _xml)
     _doxygen_get(output-latex.generate-latex _latex)
     _doxygen_get(general.output-dir _output_dir)
-    TPA_get(GENERATE_PDF _pdf)
+    _doxygen_get(GENERATE_PDF _pdf)
 
     set(_out "")
     if (_option STREQUAL FILES)
@@ -397,8 +397,8 @@ endfunction()
 # * ``_out_var`` the list of files in input sources
 ##############################################################################
 function(_doxygen_list_inputs _out_var)
-    TPA_get(INPUTS _inputs)
-    TPA_get(INPUT_TARGET _input_target)
+    _doxygen_get(INPUT _inputs)
+    _doxygen_get(INPUT_TARGET _input_target)
 
     set(_all_inputs "")
     if (_inputs)

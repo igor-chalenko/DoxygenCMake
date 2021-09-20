@@ -59,39 +59,6 @@ endfunction()
 ##############################################################################
 #.rst:
 #
-# .. cmake:command:: _doxygen_action
-#
-# .. code-block:: cmake
-#
-#    _doxygen_action(_property _action _value>)
-#
-# Adds a record into the action log of a property ``_property``. ``action``
-# describes what happened to the property, and ``_value`` contains a new
-# value of it.
-#
-# Action log is helpful during debugging phase: it stores all updates to a given
-# property in historical order. If a property has an incorrect value after
-# processing, that property's log could be consulted to quickly find approximate
-# location of an error.
-##############################################################################
-function(_doxygen_action _property _action _value)
-    set(_message "")
-    if ("${_value}" STREQUAL "")
-        set(_value "<<empty>>")
-    endif ()
-    set(_message "[${_action}] ${_value}")
-    TPA_get("histories" _histories)
-    TPA_append("history.${_property}" "${_message}")
-
-    if (NOT ${_property} IN_LIST _histories)
-        TPA_append("histories" ${_property})
-    endif ()
-    _doxygen_log(DEBUG "[${_action}] ${_property} -> ${_value}")
-endfunction()
-
-##############################################################################
-#.rst:
-#
 # .. cmake:command:: _doxygen_assert_not_empty
 #
 # .. code-block:: cmake

@@ -16,4 +16,5 @@ function(test_input_directories_full_3)
     TPA_clear_scope()
 endfunction()
 
+set(doxygen.project.dir "${CMAKE_CURRENT_SOURCE_DIR}")
 test_input_directories_full_3()

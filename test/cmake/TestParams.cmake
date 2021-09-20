@@ -86,7 +86,7 @@ function(test_custom_project_file_1)
 
     _doxygen_project_update(_out cmake/Doxyfile2 ${_args})
 
-    TPA_get("PROJECT_FILE" _project_file)
+    _doxygen_get("PROJECT_FILE" _project_file)
     _doxygen_get("OUTPUT_DIRECTORY" _output)
     _doxygen_get("EXAMPLE_PATH" _examples)
 
@@ -137,7 +137,7 @@ function(test_input_directories_full_1)
 endfunction()
 
 function(test_input_directories_full_2)
-    doxygen_add_override("WARNINGS" OPTION false)
+    doxygen_add_override("WARNINGS" OPTION NO)
 
     _doxygen_params_init()
     set(_args INPUT_TARGET main)
@@ -171,7 +171,6 @@ function(test_latex_find_package)
     TPA_clear_scope()
 endfunction()
 
-#set(DOXYGEN_LOG_LEVEL DEBUG)
 set(doxygen.project.dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
 test_input_flags_1()

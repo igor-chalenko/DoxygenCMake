@@ -3,11 +3,11 @@ function(test_create_targets)
     _doxygen_set(GENERATE_HTML ON)
     _doxygen_set(GENERATE_LATEX ON)
     #_JSON_set(doxygen.output-latex.generate-latex true)
-    TPA_set(GENERATE_PDF true)
+    _doxygen_set(GENERATE_PDF true)
 
     #add_custom_target(_test COMMAND "${CMAKE_COMMAND} --version")
-    TPA_set(INPUT_TARGET main)
-    TPA_set(TARGET_NAME "doxygen_docs")
+    _doxygen_set(INPUT_TARGET main)
+    _doxygen_set(TARGET_NAME "doxygen_docs")
     configure_file(cmake/Doxyfile2
             ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile2 @ONLY)
     _doxygen_add_targets(${PROJECT_SOURCE_DIR}/Doxyfile2

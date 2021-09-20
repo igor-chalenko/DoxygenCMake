@@ -21,41 +21,27 @@
 #
 # .. code-block:: cmake
 #
-#    _doxygen_params_init_inputs()
-#
-# Initializes input parameters that should be parsed by
-# :ref:`doxygen_add_docs`.
-##############################################################################
-function(_doxygen_params_init_inputs)
-    get_property(_doxygen_dir GLOBAL PROPERTY _doxygen_dir)
-    if (NOT _doxygen_dir)
-        get_filename_component(_doxygen_dir ${CMAKE_CURRENT_LIST_FILE} PATH)
-    endif()
-
-    _doxygen_input_string(
-            PROJECT_FILE
-            UPDATER "update_project_file"
-            DEFAULT "${_doxygen_dir}/Doxyfile"
-    )
-    _doxygen_input_string(INPUT_TARGET SETTER "set_input_target")
-    _doxygen_input_string(TARGET_NAME SETTER "set_target_name")
-    _doxygen_input_string(INSTALL_COMPONENT DEFAULT docs)
-    _doxygen_input_option(GENERATE_PDF DEFAULT NO)
-endfunction()
-
-##############################################################################
-#.rst:
-#
-# .. cmake:command:: _doxygen_params_init_inputs
-#
-# .. code-block:: cmake
-#
 #    _doxygen_params_init_overrides()
 #
 # Initializes properties that are processed by the chain of handlers:
 #   ``input`` -> ``json`` -> ``setter`` -> ``updater`` -> ``default``
 ##############################################################################
 function(_doxygen_params_init_properties)
+    get_property(_doxygen_dir GLOBAL PROPERTY _doxygen_dir)
+    if (NOT _doxygen_dir)
+        get_filename_component(_doxygen_dir ${CMAKE_CURRENT_LIST_FILE} PATH)
+    endif()
+
+    # todo
+    _doxygen_property_add(PROJECT_FILE STRING
+            UPDATER "update_project_file"
+            DEFAULT "${_doxygen_dir}/Doxyfile"
+    )
+    _doxygen_property_add(INPUT_TARGET STRING SETTER "set_input_target")
+    _doxygen_property_add(TARGET_NAME STRING SETTER "set_target_name")
+    _doxygen_property_add(INSTALL_COMPONENT STRING DEFAULT docs)
+    _doxygen_property_add(GENERATE_PDF OPTION DEFAULT NO)
+
     _doxygen_property_add("QUIET" OPTION DEFAULT YES)
     _doxygen_property_add("WARNINGS" OPTION DEFAULT YES)
     _doxygen_property_add("HAVE_DOT" OPTION SETTER "set_have_dot" OVERWRITE)
@@ -147,7 +133,7 @@ function(_doxygen_project_load _project_file_name)
 
     file(STRINGS "${_project_file_name}" _file_lines)
     foreach(_line IN LISTS _file_lines)
-        if(_line MATCHES "([A-Z][A-Z0-9_]+)( *=)(.*)")
+        if(_line MATCHES "^([A-Z][A-Z0-9_]+)( *=)(.*)")
             set(_key "${CMAKE_MATCH_1}")
             set(_eql "${CMAKE_MATCH_2}")
             set(_value "${CMAKE_MATCH_3}")
@@ -184,8 +170,10 @@ function(_doxygen_project_save _project_file_name)
         TPA_get(${_key} _value)
         string(SUBSTRING ${_key} 13 -1 _key)
         string(APPEND _contents "${_key} =")
+        #_doxygen_log(DEBUG "${_key} = ${_value}")
         foreach(_val ${_value})
-            if (_val MATCHES " ")
+            string(SUBSTRING "${_value}" 0 1 _first_char)
+            if (_val MATCHES " " AND NOT _first_char STREQUAL "\"")
                 string(APPEND _contents " \"${_val}\"")
             else()
                 string(APPEND _contents " ${_val}")
@@ -306,7 +294,7 @@ endfunction()
 ##############################################################################
 function(_doxygen_params_init)
     # define acceptable input parameters
-    _doxygen_params_init_inputs()
+    # _doxygen_params_init_inputs()
     # define properties that are processed by the chain of handlers
     # `input` -> `json` -> `setter` -> `updater` -> `default`
     _doxygen_params_init_properties()
