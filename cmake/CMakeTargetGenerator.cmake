@@ -5,6 +5,8 @@
 # https://opensource.org/licenses/MIT
 ##############################################################################
 
+cmake_policy(SET CMP0011 NEW)
+
 ##############################################################################
 #.rst:
 #
@@ -111,12 +113,12 @@ function(_doxygen_add_target _project_file _updated_project_file _target_name)
     _doxygen_list_outputs("${_output_dir}" _files FILES)
 
     add_custom_command(OUTPUT ${_files}
-            COMMAND ${CMAKE_COMMAND} -E remove_directory ${_output_dir}
+            COMMAND ${CMAKE_COMMAND} -E remove_directory "${_output_dir}"
             DEPENDS "${_project_file}" "${_inputs}" "${_updated_project_file}"
-            COMMAND Doxypress::doxygen "${_updated_project_file}"
+            COMMAND Doxygen::doxygen "${_updated_project_file}"
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            COMMENT "Generating API documentation with Doxypress..."
-            BYPRODUCTS ${_output_dir}
+            COMMENT "Generating API documentation with Doxygen..."
+            BYPRODUCTS "${_output_dir}"
             VERBATIM)
 
     get_property(_doxygen_dir GLOBAL PROPERTY _doxygen_dir)

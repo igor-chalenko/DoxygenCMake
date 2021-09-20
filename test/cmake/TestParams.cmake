@@ -123,6 +123,7 @@ function(test_input_directories_full_1)
     _doxygen_project_load(${_out})
     _doxygen_get("INPUT" _inputs)
 
+    separate_arguments(_inputs)
     assert_same("${_inputs}"
             "${CMAKE_CURRENT_SOURCE_DIR}/dir1;${CMAKE_CURRENT_SOURCE_DIR}/dir2")
 
@@ -147,6 +148,7 @@ function(test_input_directories_full_2)
 
     _doxygen_get(INPUT _inputs)
 
+    separate_arguments(_inputs)
     assert_same("${_inputs}"
             "${CMAKE_CURRENT_SOURCE_DIR}/include;${CMAKE_CURRENT_SOURCE_DIR}/include5")
     _doxygen_get("WARNINGS" _warnings)

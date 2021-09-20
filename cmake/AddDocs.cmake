@@ -242,10 +242,11 @@ function(doxygen_add_docs)
     _doxygen_params_init()
     # parse input arguments
     #_doxygen_inputs_parse(${ARGN})
-    # get the project file name
-    TPA_get(PROJECT_FILE _project_file)
 
     _doxygen_inputs_parse(${ARGN})
+
+    # get the project file name
+    TPA_get(PROJECT_FILE _project_file)
 
     _doxygen_output_project_file_name(${_project_file} _updated_project_file)
 
