@@ -82,6 +82,14 @@ function(_doxygen_set_makeindex_cmd_name _out_var)
     endif ()
 endfunction()
 
+function(_doxygen_set_project_file _out_var)
+    set(_template "${CMAKE_CURRENT_BINARY_DIR}/doxyfile.template.txt")
+    execute_process(
+       COMMAND ${DOXYGEN_EXECUTABLE} -s -g "${_template}"
+       OUTPUT_QUIET
+       RESULT_VARIABLE _doxygen_tpl_result)
+    set(${_out_var} "${_template}" PARENT_SCOPE)
+endfunction()
 ##############################################################################
 #.rst:
 # .. cmake:command:: _doxygen_update_project_file

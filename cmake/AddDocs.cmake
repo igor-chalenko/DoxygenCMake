@@ -241,8 +241,6 @@ function(doxygen_add_docs)
     # initialize parameter/property descriptions
     _doxygen_params_init()
     # parse input arguments
-    #_doxygen_inputs_parse(${ARGN})
-
     _doxygen_inputs_parse(${ARGN})
 
     # get the project file name
@@ -271,6 +269,8 @@ function(doxygen_prepare_doxyfile)
     # get the project file name
     _doxygen_get(PROJECT_FILE _project_file)
     # update project file
+    _doxygen_update_path(PROJECT_FILE ${ARGN})
+
     _doxygen_project_update(_updated_project_file "${_project_file}" ${ARGN})
     # clear up the TPA scope created by this function
     TPA_clear_scope()

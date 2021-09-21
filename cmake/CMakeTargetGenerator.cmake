@@ -117,7 +117,7 @@ function(_doxygen_add_target _project_file _updated_project_file _target_name)
             DEPENDS "${_project_file}" "${_inputs}" "${_updated_project_file}"
             COMMAND Doxygen::doxygen "${_updated_project_file}"
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            COMMENT "Generating API documentation with Doxygen..."
+            COMMENT "Generating documentation using ${_updated_project_file} ..."
             BYPRODUCTS "${_output_dir}"
             VERBATIM)
 
