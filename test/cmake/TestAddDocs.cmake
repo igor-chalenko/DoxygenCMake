@@ -4,7 +4,7 @@ function(test_input_directories_full_3)
     #set(LATEX_FOUND NO)
     doxygen_prepare_doxyfile(INPUT_TARGET main
             INPUT dir1 dir2)
-    doxygen_add_docs(
+    doxygen_add_docs_new(
             INPUT_TARGET main
             INPUT dir1 dir2)
 

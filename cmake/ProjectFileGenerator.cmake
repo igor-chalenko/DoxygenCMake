@@ -82,10 +82,10 @@ function(_doxygen_parse_input _out_var _property)
         set(_value "${DOXYGEN_${_property}}")
     endif()
     if (${_property} IN_LIST _option_args)
-        #if (_value STREQUAL NO)
-        #    _doxygen_log(DEBUG "erase the non-option ${_property}")
-        #    set(_value "")
-        #endif()
+        if (_value STREQUAL NO AND NOT _property IN_LIST ARGN)
+            # message(STATUS "erase the non-option ${_property}")
+            set(_value "")
+        endif()
     endif()
     set(${_out_var} "${_value}" PARENT_SCOPE)
 
@@ -234,6 +234,13 @@ function(_doxygen_update_path _path)
 
     set(_value "")
     if (_input_value STREQUAL "")
+        #_doxygen_log(DEBUG "before applying default: ${_path} = ${_value}")
+        _doxygen_property_apply_default(${_path}
+                "${_default}"
+                "${_value}"
+                "${_input_value}"
+                _value)
+
         _doxygen_property_apply_setter(${_path} "${_setter}" _value)
         if ("${_value}" STREQUAL "")
             set(_value "${_project_value}")
@@ -243,12 +250,6 @@ function(_doxygen_update_path _path)
         _doxygen_property_apply_updater(${_path}
                 "${_updater}"
                 "${_value}"
-                _value)
-        #_doxygen_log(DEBUG "before applying default: ${_path} = ${_value}")
-        _doxygen_property_apply_default(${_path}
-                "${_default}"
-                "${_value}"
-                "${_input_value}"
                 _value)
         #_doxygen_log(DEBUG "after applying default: ${_path} = ${_value}")
 
@@ -389,6 +390,15 @@ endfunction()
 function(_doxygen_inputs_parse)
     TPA_get(doxygen.updatable.properties _updatable_paths)
 
+    foreach (_path ${_updatable_paths})
+        _doxygen_update_path(${_path} ${ARGN})
+    endforeach()
+endfunction()
+
+function(_doxygen_parse_inputs)
+    _doxygen_init_input_params()
+    # todo rename
+    TPA_get(doxygen.updatable.properties _updatable_paths)
     foreach (_path ${_updatable_paths})
         _doxygen_update_path(${_path} ${ARGN})
     endforeach()

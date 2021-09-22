@@ -83,11 +83,13 @@ function(_doxygen_set_makeindex_cmd_name _out_var)
 endfunction()
 
 function(_doxygen_set_project_file _out_var)
-    set(_template "${CMAKE_CURRENT_BINARY_DIR}/doxyfile.template.txt")
-    execute_process(
-       COMMAND ${DOXYGEN_EXECUTABLE} -s -g "${_template}"
-       OUTPUT_QUIET
-       RESULT_VARIABLE _doxygen_tpl_result)
+    set(_template "${CMAKE_CURRENT_BINARY_DIR}/doxyfile.template.in")
+    if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/doxyfile.template.in")
+        execute_process(
+           COMMAND ${DOXYGEN_EXECUTABLE} -s -g "${_template}"
+           OUTPUT_QUIET
+           RESULT_VARIABLE _doxygen_tpl_result)
+    endif()
     set(${_out_var} "${_template}" PARENT_SCOPE)
 endfunction()
 ##############################################################################

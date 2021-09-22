@@ -259,15 +259,48 @@ function(doxygen_add_docs)
     TPA_clear_scope()
 endfunction()
 
+function(doxygen_add_docs_new)
+    TPA_set("add.docs.args" "${ARGN}")
+    # parse input arguments
+    _doxygen_parse_inputs(${ARGN})
+
+    TPA_get(doxygen.updatable.properties _input_properties)
+    foreach(_property ${_input_properties})
+        _doxygen_get(${_property} _value)
+        message(STATUS "obtained ${_property} = ${_value}")
+    endforeach()
+
+    # get the project file name
+    #_doxygen_get(PROJECT_FILE _project_file)
+
+    #_doxygen_output_project_file_name(${_project_file} _updated_project_file)
+
+    #_doxygen_add_targets("${_project_file}" "${_updated_project_file}")
+
+    _doxygen_create_generate_project_target()
+    _doxygen_create_generate_docs_target()
+    #_doxygen_create_open_targets()
+
+    #if (DOXYGEN_INSTALL_DOCS)
+        # install generated files
+    #    _doxygen_create_install_targets()
+    #endif ()
+
+    # clear up the TPA scope created by this function
+    TPA_clear_scope()
+endfunction()
+
 function(doxygen_prepare_doxyfile)
-    #string(RANDOM _random_id)
     # initialize parameter/property descriptions
     _doxygen_params_init()
     # parse input arguments
+    _doxygen_parse_inputs(${ARGN})
+
     _doxygen_inputs_parse(${ARGN})
 
     # get the project file name
     _doxygen_get(PROJECT_FILE _project_file)
+    message(STATUS "PROJECT_FILE = ${_project_file}")
     # update project file
     _doxygen_update_path(PROJECT_FILE ${ARGN})
 

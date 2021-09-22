@@ -14,6 +14,25 @@
 # :ref:`doxygen_add_docs` implementation.
 ##############################################################################
 
+function(_doxygen_init_input_params)
+    _doxygen_property_add(PROJECT_FILE STRING
+            SETTER "set_project_file"
+            UPDATER "update_project_file")
+    _doxygen_property_add(INPUT_TARGET STRING SETTER "set_input_target")
+    _doxygen_property_add(TARGET_NAME STRING SETTER "set_target_name")
+    _doxygen_property_add(INSTALL_COMPONENT STRING DEFAULT docs)
+    _doxygen_property_add(GENERATE_XML OPTION DEFAULT NO)
+    _doxygen_property_add(GENERATE_HTML STRING DEFAULT YES)
+    _doxygen_property_add(GENERATE_LATEX OPTION
+            UPDATER "update_generate_latex"
+            DEFAULT NO)
+    _doxygen_property_add(GENERATE_PDF OPTION DEFAULT NO)
+    _doxygen_property_add(OUTPUT_DIRECTORY STRING
+            UPDATER "update_output_dir"
+            DEFAULT "${CMAKE_CURRENT_BINARY_DIR}/doxygen-generated")
+    _doxygen_property_add("QUIET" OPTION DEFAULT YES)
+    _doxygen_property_add("WARNINGS" OPTION DEFAULT YES)
+endfunction()
 ##############################################################################
 #.rst:
 #
@@ -27,31 +46,16 @@
 #   ``input`` -> ``json`` -> ``setter`` -> ``updater`` -> ``default``
 ##############################################################################
 function(_doxygen_params_init_properties)
-    get_property(_doxygen_dir GLOBAL PROPERTY _doxygen_dir)
-    if (NOT _doxygen_dir)
-        get_filename_component(_doxygen_dir ${CMAKE_CURRENT_LIST_FILE} PATH)
-    endif()
-
-    _doxygen_property_add(PROJECT_FILE STRING
-            SETTER "set_project_file"
-            UPDATER "update_project_file")
-    _doxygen_property_add(INPUT_TARGET STRING SETTER "set_input_target")
-    _doxygen_property_add(TARGET_NAME STRING SETTER "set_target_name")
-    _doxygen_property_add(INSTALL_COMPONENT STRING DEFAULT docs)
-    _doxygen_property_add(GENERATE_PDF OPTION DEFAULT NO)
-
-    #_doxygen_property_add("QUIET" OPTION DEFAULT YES)
-    #_doxygen_property_add("WARNINGS" OPTION DEFAULT YES)
     _doxygen_property_add("HAVE_DOT" OPTION SETTER "set_have_dot" OVERWRITE)
     _doxygen_property_add("DOT_PATH" STRING SETTER "set_dot_path" OVERWRITE)
     _doxygen_property_add("DIA_PATH" STRING SETTER "set_dia_path" OVERWRITE)
-    _doxygen_property_add(GENERATE_XML OPTION DEFAULT NO)
-    _doxygen_property_add(GENERATE_LATEX OPTION UPDATER "update_generate_latex"
-            DEFAULT NO)
-    _doxygen_property_add(GENERATE_HTML STRING DEFAULT YES)
-    _doxygen_property_add(OUTPUT_DIRECTORY STRING
-            UPDATER "update_output_dir"
-            DEFAULT "${CMAKE_CURRENT_BINARY_DIR}/doxygen-generated")
+    #_doxygen_property_add(GENERATE_XML OPTION DEFAULT NO)
+    #_doxygen_property_add(GENERATE_LATEX OPTION UPDATER "update_generate_latex"
+    #        DEFAULT NO)
+    #_doxygen_property_add(GENERATE_HTML STRING DEFAULT YES)
+    #_doxygen_property_add(OUTPUT_DIRECTORY STRING
+    #        UPDATER "update_output_dir"
+    #        DEFAULT "${CMAKE_CURRENT_BINARY_DIR}/doxygen-generated")
     _doxygen_property_add(INPUT LIST
             UPDATER "update_input_source")
     _doxygen_property_add(EXAMPLE_PATH LIST
@@ -291,6 +295,9 @@ endfunction()
 function(_doxygen_output_project_file_name _project_file_name _out_var)
     _doxygen_assert_not_empty("${_project_file_name}")
     get_filename_component(_name "${_project_file_name}" NAME)
+    if (_name STREQUAL "doxyfile.template.in")
+        set(_name "doxyfile.template.txt")
+    endif()
     set(${_out_var} ${CMAKE_CURRENT_BINARY_DIR}/${_name} PARENT_SCOPE)
 endfunction()
 
@@ -308,7 +315,7 @@ endfunction()
 ##############################################################################
 function(_doxygen_params_init)
     # define acceptable input parameters
-    # _doxygen_params_init_inputs()
+    _doxygen_init_input_params()
     # define properties that are processed by the chain of handlers
     # `input` -> `json` -> `setter` -> `updater` -> `default`
     _doxygen_params_init_properties()

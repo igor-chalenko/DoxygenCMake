@@ -17,5 +17,4 @@ set_property(GLOBAL PROPERTY _doxygen_dir "${_doxygen_dir}")
 # "New" IN_LIST syntax
 cmake_policy(SET CMP0057 NEW)
 
-message(STATUS "!!! Including ${_doxygen_dir}/AddDocs.cmake")
 include(${_doxygen_dir}/AddDocs.cmake)

@@ -78,11 +78,48 @@ function(_doxygen_add_targets _project_file _updated_project_file)
                 "${_target_name}")
         _doxygen_add_pdf_commands("${_target_name}")
         if (DOXYGEN_ADD_OPEN_TARGETS)
-            _doxygen_add_open_targets("${_target_name}" )
+            _doxygen_create_open_targets("${_target_name}" )
         endif ()
     else()
         _doxygen_log(WARN "The target ${_target_name} already exists.")
     endif ()
+endfunction()
+
+function(_doxygen_create_generate_project_target)
+    TPA_get("option_args" _option_args)
+    TPA_get("one_value_args" _one_value_args)
+    TPA_get("multi_value_args" _multi_value_args)
+
+    _doxygen_get(PROJECT_FILE _project_file)
+    _doxygen_get(TARGET_NAME _target_name)
+    _doxygen_output_project_file_name(${_project_file} _updated_project_file)
+
+    set (_new_args "")
+    TPA_get(doxygen.updatable.properties _input_properties)
+    foreach(_property ${_input_properties})
+        _doxygen_get(${_property} _value)
+        TPA_get(${_property}_TYPE _type)
+        if (_type STREQUAL OPTION)
+            if (_value STREQUAL "YES")
+                list(APPEND _new_args "${_property}")
+            endif()
+        else()
+            list(APPEND _new_args "${_property} ${_value}")
+        endif()
+    endforeach()
+
+    get_property(_doxygen_dir GLOBAL PROPERTY _doxygen_dir)
+    message(STATUS "!!! _project_file = ${_project_file}")
+    message(STATUS "!!! _updated_project_file = ${_updated_project_file}")
+    add_custom_command(
+            OUTPUT "${_updated_project_file}"
+            DEPENDS "${_project_file}"
+            COMMAND ${CMAKE_COMMAND} -Dproject_dir="${CMAKE_CURRENT_SOURCE_DIR}" -Dargs=\"${_new_args}\" -P ${_doxygen_dir}/proto.cmake)
+
+    message(STATUS "CMake will use: -Dproject_dir=\"${CMAKE_CURRENT_SOURCE_DIR}\" -Dargs=\"${_new_args}\"")
+
+    add_custom_target(${_target_name}.prepare_doxyfile
+            DEPENDS "${_updated_project_file}")
 endfunction()
 
 ##############################################################################
@@ -104,63 +141,35 @@ endfunction()
 # * ``_updated_project_file`` processed project file name
 # * ``_target_name`` the name of the target to create
 ##############################################################################
-function(_doxygen_add_target _project_file _updated_project_file _target_name)
-    _doxygen_get(general.output-dir _output_dir)
+function(_doxygen_create_generate_docs_target)
+    _doxygen_get(OUTPUT_DIRECTORY _output_dir)
+    _doxygen_get(PROJECT_FILE _project_file)
+    _doxygen_get(TARGET_NAME _target_name)
+    _doxygen_output_project_file_name(${_project_file} _updated_project_file)
     # collect inputs for `DEPENDS` parameter
     _doxygen_list_inputs(_inputs)
     _doxygen_assert_not_empty("${_inputs}")
     # collect outputs for the `OUTPUTS` parameter
     _doxygen_list_outputs("${_output_dir}" _files FILES)
 
-    add_custom_command(OUTPUT ${_files}
+    set(__stamp_file "${CMAKE_CURRENT_BINARY_DIR}/${_target_name}.stamp")
+
+    add_custom_command(OUTPUT ${__stamp_file}
             COMMAND ${CMAKE_COMMAND} -E remove_directory "${_output_dir}"
-            DEPENDS "${_project_file}" "${_inputs}" "${_updated_project_file}"
+            MAIN_DEPENDENCY "${_updated_project_file}"
+            DEPENDS ${_inputs}
             COMMAND Doxygen::doxygen "${_updated_project_file}"
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMAND ${CMAKE_COMMAND} -E touch ${__stamp_file}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             COMMENT "Generating documentation using ${_updated_project_file} ..."
-            BYPRODUCTS "${_output_dir}"
+            BYPRODUCTS "${_files}"
             VERBATIM)
 
-    get_property(_doxygen_dir GLOBAL PROPERTY _doxygen_dir)
-
-    TPA_get("add.docs.args" _add_docs_args)
-    TPA_get("option_args" _option_args)
-    TPA_get("one_value_args" _one_value_args)
-    TPA_get("multi_value_args" _multi_value_args)
-    set (_new_args "")
-
-    foreach(_arg ${_one_value_args})
-        TPA_get(${_arg} _value)
-        if (_value)
-            list(APPEND _new_args "${_arg} ${_value}")
-        endif()
-    endforeach()
-    foreach(_arg ${_multi_value_args})
-        TPA_get(${_arg} _value)
-        if (_value)
-            list(APPEND _new_args "${_arg} ${_value}")
-        endif()
-    endforeach()
-    foreach(_arg ${_option_args})
-        TPA_get(${_arg} _value)
-        if (_value)
-            list(APPEND _new_args "${_arg}")
-        endif()
-    endforeach()
-
-    #message(STATUS "_new_args = ${_new_args}")
-    add_custom_command(
-            OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_updated_project_file}"
-            DEPENDS "${_project_file}"
-            COMMAND ${CMAKE_COMMAND} -Dproject_dir="${CMAKE_CURRENT_SOURCE_DIR}" -D_new_args=\"${_new_args}\" -P ${_doxygen_dir}/proto.cmake)
-
-    add_custom_target(${_target_name}.prepare_doxyfile
-            DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${_updated_project_file}")
-
     add_custom_target(${_target_name}
-            DEPENDS ${_files} ${_target_name}.prepare_doxyfile
-            COMMENT "Generating docs...")
-
+            DEPENDS ${__stamp_file}
+            SOURCES ${_sources}
+            )
+    unset(__stamp_file)
 
 endfunction()
 
@@ -219,11 +228,12 @@ endfunction()
 # * ``_output_dir`` a directory where documentation files will be generated
 #   by the ``doxygen`` target
 ##############################################################################
-function(_doxygen_add_open_targets _name_prefix)
-    _doxygen_get(OUTPUT_DIRECTORY _output_dir)
+function(_doxygen_create_open_targets)
+    _doxygen_get(TARGET_NAME _name_prefix)
     _doxygen_get(GENERATE_HTML _generate_html)
     _doxygen_get(GENERATE_LATEX _generate_latex)
     _doxygen_get(GENERATE_PDF _generate_pdf)
+    _doxygen_get(OUTPUT_DIRECTORY _output_dir)
 
     if (WIN32)
         set(DOXYGEN_LAUNCHER_COMMAND start)
@@ -237,19 +247,19 @@ function(_doxygen_add_open_targets _name_prefix)
     if (DOXYGEN_LAUNCHER_COMMAND)
         if (_generate_html AND NOT TARGET ${_name_prefix}.open_html)
             # Create a target to open the generated HTML file.
-            _doxygen_add_open_target(
+            _doxygen_create_open_target(
                     ${_name_prefix}.open_html
                     ${_name_prefix}
                     "${_output_dir}/html/index.html")
         endif ()
-        if (_generate_latex AND NOT TARGET ${_name_prefix}.open_latex)
-            _doxygen_add_open_target(
+        if (_generate_latex OR _generate_pdf AND NOT TARGET ${_name_prefix}.open_latex)
+            _doxygen_create_open_target(
                     ${_name_prefix}.open_latex
                     ${_name_prefix}
                     "${_output_dir}/latex/refman.tex")
         endif ()
         if (_generate_pdf AND NOT TARGET ${_name_prefix}.open_pdf)
-            _doxygen_add_open_target(
+            _doxygen_create_open_target(
                     ${_name_prefix}.open_pdf
                     ${_name_prefix}
                     "${_output_dir}/pdf/refman.pdf")
@@ -259,11 +269,11 @@ endfunction()
 
 ##############################################################################
 #.rst:
-# .. cmake:command:: _doxygen_add_open_target
+# .. cmake:command:: _doxygen_create_open_target
 #
 # ..  code-block:: cmake
 #
-#   _doxygen_add_open_target(<target name> <parent target name> <file name>)
+#   _doxygen_create_open_target(<target name> <parent target name> <file name>)
 #
 # Creates a target that opens a given file for viewing. Synonymous
 # to `start file` on Windows or `xdg-open file` on Gnome desktops.
@@ -276,7 +286,7 @@ endfunction()
 #   serves as a dependency for the target ``_target_name``
 # * ``_file`` a file to open, such as `index.html`
 ##############################################################################
-function(_doxygen_add_open_target _target_name _parent_target_name _file)
+function(_doxygen_create_open_target _target_name _parent_target_name _file)
     _doxygen_log(INFO "Adding launch target ${_target_name} for ${_file}...")
     add_custom_target(${_target_name}
             COMMAND ${DOXYGEN_LAUNCHER_COMMAND} "${_file}"
@@ -345,10 +355,10 @@ endfunction()
 ##############################################################################
 function(_doxygen_list_outputs _option _out_var)
     # can't override these because they are in input parameters
-    _doxygen_get(output-html.generate-html _html)
-    _doxygen_get(output-xml.generate-xml _xml)
-    _doxygen_get(output-latex.generate-latex _latex)
-    _doxygen_get(general.output-dir _output_dir)
+    _doxygen_get(GENERATE_HTML _html)
+    _doxygen_get(GENERATE_XML _xml)
+    _doxygen_get(GENERATE_LATEX _latex)
+    _doxygen_get(OUTPUT_DIRECTORY _output_dir)
     _doxygen_get(GENERATE_PDF _pdf)
 
     set(_out "")
@@ -406,8 +416,10 @@ function(_doxygen_list_inputs _out_var)
             if (IS_DIRECTORY ${_dir})
                 file(GLOB_RECURSE _inputs ${_dir}/*)
                 list(APPEND _all_inputs "${_inputs}")
+                message(STATUS "1. appending inputs ${_inputs}")
             else ()
                 list(APPEND _all_inputs "${_dir}")
+                message(STATUS "2. appending inputs ${_dir}")
             endif ()
         endforeach ()
     elseif (_input_target)
@@ -417,6 +429,7 @@ function(_doxygen_list_inputs _out_var)
         foreach (_dir ${_include_directories})
             file(GLOB_RECURSE _inputs "${_dir}/*")
             list(APPEND _all_inputs "${_inputs}")
+            message(STATUS "3. appending inputs ${_inputs} from ${_dir}")
         endforeach ()
     else ()
         message(FATAL_ERROR [=[
@@ -426,5 +439,6 @@ for `doxygen_add_docs`:
 2) Input project file didn't specify any inputs either.]=])
     endif ()
 
+    message(STATUS "!!! _all_inputs = ${_all_inputs}")
     set(${_out_var} "${_all_inputs}" PARENT_SCOPE)
 endfunction()
