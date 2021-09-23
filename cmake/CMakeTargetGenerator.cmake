@@ -101,10 +101,12 @@ function(_doxygen_create_generate_project_target)
         TPA_get(${_property}_TYPE _type)
         if (_type STREQUAL OPTION)
             if (_value STREQUAL "YES")
-                list(APPEND _new_args "${_property}")
+                string(APPEND _new_args " -D${_property}=YES")
             endif()
         else()
-            list(APPEND _new_args "${_property} ${_value}")
+            # escape file names
+            #string(REPLACE " " "\\ " _new_value ${_value})
+            string(APPEND _new_args " -D${_property}=\"${_value}\"")
         endif()
     endforeach()
 
@@ -114,9 +116,9 @@ function(_doxygen_create_generate_project_target)
     add_custom_command(
             OUTPUT "${_updated_project_file}"
             DEPENDS "${_project_file}"
-            COMMAND ${CMAKE_COMMAND} -Dproject_dir="${CMAKE_CURRENT_SOURCE_DIR}" -Dargs=\"${_new_args}\" -P ${_doxygen_dir}/proto.cmake)
+            COMMAND ${CMAKE_COMMAND} -Dproject_dir="${CMAKE_CURRENT_SOURCE_DIR}" ${_new_args} -P ${_doxygen_dir}/proto.cmake)
 
-    message(STATUS "CMake will use: -Dproject_dir=\"${CMAKE_CURRENT_SOURCE_DIR}\" -Dargs=\"${_new_args}\"")
+    message(STATUS "CMake will use: -Dproject_dir=\"${CMAKE_CURRENT_SOURCE_DIR}\" ${_new_args}")
 
     add_custom_target(${_target_name}.prepare_doxyfile
             DEPENDS "${_updated_project_file}")

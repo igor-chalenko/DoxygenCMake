@@ -298,7 +298,7 @@ function(_doxygen_output_project_file_name _project_file_name _out_var)
     if (_name STREQUAL "doxyfile.template.in")
         set(_name "doxyfile.template.txt")
     endif()
-    set(${_out_var} ${CMAKE_CURRENT_BINARY_DIR}/${_name} PARENT_SCOPE)
+    set(${_out_var} "${CMAKE_CURRENT_BINARY_DIR}/${_name}" PARENT_SCOPE)
 endfunction()
 
 ##############################################################################

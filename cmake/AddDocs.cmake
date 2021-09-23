@@ -236,7 +236,7 @@ include(${_doxygen_dir}/PropertyHandlers.cmake)
 #
 # .. _json-cmake: https://github.com/sbellus/json-cmake
 ##############################################################################
-function(doxygen_add_docs)
+function(doxygen_add_docs_2)
     TPA_set("add.docs.args" "${ARGN}")
     # initialize parameter/property descriptions
     _doxygen_params_init()
@@ -296,8 +296,6 @@ function(doxygen_prepare_doxyfile)
     # parse input arguments
     _doxygen_parse_inputs(${ARGN})
 
-    _doxygen_inputs_parse(${ARGN})
-
     # get the project file name
     _doxygen_get(PROJECT_FILE _project_file)
     message(STATUS "PROJECT_FILE = ${_project_file}")
@@ -305,6 +303,29 @@ function(doxygen_prepare_doxyfile)
     _doxygen_update_path(PROJECT_FILE ${ARGN})
 
     _doxygen_project_update(_updated_project_file "${_project_file}" ${ARGN})
+    # clear up the TPA scope created by this function
+    TPA_clear_scope()
+endfunction()
+
+function(doxygen_add_docs)
+    TPA_set("add.docs.args" "${ARGN}")
+    # initialize input parameters
+    _doxygen_input_params_init()
+    # parse input arguments
+    _doxygen_inputs_parse(${ARGN})
+
+    # get the project file name
+    _doxygen_get(PROJECT_FILE _project_file)
+
+    _doxygen_output_project_file_name(${_project_file} _updated_project_file)
+
+    _doxygen_add_generate_target("${_project_file}" "${_updated_project_file}")
+
+    if (DOXYGEN_INSTALL_DOCS)
+        # install generated files
+        _doxygen_add_install_target()
+    endif ()
+
     # clear up the TPA scope created by this function
     TPA_clear_scope()
 endfunction()
