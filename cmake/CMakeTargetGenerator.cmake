@@ -101,24 +101,26 @@ function(_doxygen_create_generate_project_target)
         TPA_get(${_property}_TYPE _type)
         if (_type STREQUAL OPTION)
             if (_value STREQUAL "YES")
-                string(APPEND _new_args " -D${_property}=YES")
+                list(APPEND _new_args "-D${_property}=YES ")
             endif()
         else()
             # escape file names
             #string(REPLACE " " "\\ " _new_value ${_value})
-            string(APPEND _new_args " -D${_property}=\"${_value}\"")
+            list(APPEND _new_args "-D${_property}=\"${_value}\" ")
         endif()
     endforeach()
 
     get_property(_doxygen_dir GLOBAL PROPERTY _doxygen_dir)
-    message(STATUS "!!! _project_file = ${_project_file}")
-    message(STATUS "!!! _updated_project_file = ${_updated_project_file}")
+    #message(STATUS "!!! _project_file = ${_project_file}")
+    #message(STATUS "!!! _updated_project_file = ${_updated_project_file}")
     add_custom_command(
+            VERBATIM
             OUTPUT "${_updated_project_file}"
             DEPENDS "${_project_file}"
-            COMMAND ${CMAKE_COMMAND} -Dproject_dir="${CMAKE_CURRENT_SOURCE_DIR}" ${_new_args} -P ${_doxygen_dir}/proto.cmake)
+            COMMAND ${CMAKE_COMMAND} ${_new_args} -Dproject_dir="${CMAKE_CURRENT_SOURCE_DIR}" -P ${_doxygen_dir}/proto.cmake)
 
-    message(STATUS "CMake will use: -Dproject_dir=\"${CMAKE_CURRENT_SOURCE_DIR}\" ${_new_args}")
+
+message(STATUS "CMake will use: -Dproject_dir=\"${CMAKE_CURRENT_SOURCE_DIR}\" ${_new_args}")
 
     add_custom_target(${_target_name}.prepare_doxyfile
             DEPENDS "${_updated_project_file}")
@@ -169,7 +171,7 @@ function(_doxygen_create_generate_docs_target)
 
     add_custom_target(${_target_name}
             DEPENDS ${__stamp_file}
-            SOURCES ${_sources}
+            SOURCES ${_inputs}
             )
     unset(__stamp_file)
 

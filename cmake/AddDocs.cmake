@@ -267,11 +267,12 @@ function(doxygen_add_docs_new)
     TPA_get(doxygen.updatable.properties _input_properties)
     foreach(_property ${_input_properties})
         _doxygen_get(${_property} _value)
-        message(STATUS "obtained ${_property} = ${_value}")
+        #message(STATUS "obtained ${_property} = ${_value}")
     endforeach()
 
     # get the project file name
-    #_doxygen_get(PROJECT_FILE _project_file)
+    _doxygen_get(INPUT _input)
+    message(STATUS "!!! _input = ${_input}")
 
     #_doxygen_output_project_file_name(${_project_file} _updated_project_file)
 
@@ -279,7 +280,10 @@ function(doxygen_add_docs_new)
 
     _doxygen_create_generate_project_target()
     _doxygen_create_generate_docs_target()
-    #_doxygen_create_open_targets()
+    #if (DOXYGEN_OPEN_TARGETS)
+        #_doxygen_create_open_targets()
+    #endif()
+
 
     #if (DOXYGEN_INSTALL_DOCS)
         # install generated files
@@ -300,6 +304,7 @@ function(doxygen_prepare_doxyfile)
     _doxygen_get(PROJECT_FILE _project_file)
     message(STATUS "PROJECT_FILE = ${_project_file}")
     # update project file
+    # todo this is probably not needed
     _doxygen_update_path(PROJECT_FILE ${ARGN})
 
     _doxygen_project_update(_updated_project_file "${_project_file}" ${ARGN})

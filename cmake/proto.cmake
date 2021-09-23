@@ -6,7 +6,6 @@ include(${_doxygen_dir}/AddDocs.cmake)
 #set(_inputs "${args}")
 set(doxygen.project.dir "${project_dir}")
 set(_project_file ${PROJECT_FILE})
-message(STATUS "!!! PROJECT_FILE = ${_project_file}")
 if (DEFINED GENERATE_HTML)
     set(_html GENERATE_HTML ${GENERATE_HTML})
 else()
@@ -38,8 +37,9 @@ else()
     set(_warnings "")
 endif()
 
-set(DOXYGEN_LOG_LEVEL DEBUG)
+#set(DOXYGEN_LOG_LEVEL DEBUG)
 set(_cmd PROJECT_FILE "${PROJECT_FILE}"
+        INPUT "${INPUT}"
         INPUT_TARGET "${INPUT_TARGET}"
         TARGET_NAME "${TARGET_NAME}"
         INSTALL_COMPONENT "${INSTALL_COMPONENT}"
@@ -51,4 +51,4 @@ set(_cmd PROJECT_FILE "${PROJECT_FILE}"
         ${_quiet}
         ${_warnings})
 message(STATUS "_cmd = ${_cmd}")
-#doxygen_prepare_doxyfile(${_cmd})
+doxygen_prepare_doxyfile(${_cmd})
