@@ -245,7 +245,7 @@ function(_doxygen_update_example_source _directories _out_var)
             if (NOT IS_ABSOLUTE "${_dir}")
                 get_filename_component(_dir
                         "${_dir}" ABSOLUTE
-                        BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+                        BASE_DIR ${doxygen.project.dir})
             endif ()
             list(APPEND _result "${_dir}")
         endforeach ()
@@ -319,6 +319,8 @@ function(_doxygen_set_example_source _out_var)
             "example;examples"
             _example_path
     )
+    message(STATUS "doxygen.project.dir = ${doxygen.project.dir}")
+    message(STATUS "example_path = ${_example_path}")
     set(${_out_var} "${_example_path}" PARENT_SCOPE)
 endfunction()
 

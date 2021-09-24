@@ -228,7 +228,9 @@ function(_doxygen_update_path _path)
 
     _doxygen_property_read_input(_input_value ${_path} ${ARGN})
     _doxygen_get(${_path} _project_value)
-    separate_arguments(_project_value)
+    if (_type STREQUAL LIST)
+        separate_arguments(_project_value)
+    endif()
     _doxygen_log(DEBUG "[_doxygen_update_path(${_path})] _input_value = ${_input_value}")
     _doxygen_log(DEBUG "[_doxygen_update_path(${_path})] _project_value = ${_project_value}")
 
