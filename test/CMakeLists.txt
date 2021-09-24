@@ -20,14 +20,6 @@ target_include_directories(main PUBLIC include include5)
 
 find_package(Doxygen)
 
-#add_custom_command(
-#        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/DoxypressCMake.json
-#        DEPENDS ${PROJECT_SOURCE_DIR}/test/doc/doxypress.json
-#        COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/proto.cmake)
-
-#add_custom_target(prepare_doxyfile DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/DoxypressCMake.json)
-#doxypress_add_docs(INPUT_TARGET main)
-
 include(../cmake/FindDoxygenCMake.cmake)
 
 if (NOT DEFINED DOXYGEN_SKIP_TEST OR NOT DOXYGEN_SKIP_TEST)

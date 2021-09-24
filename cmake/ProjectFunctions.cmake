@@ -32,6 +32,7 @@ function(_doxygen_init_input_params)
     _doxygen_property_add(OUTPUT_DIRECTORY STRING
             UPDATER "update_output_dir"
             DEFAULT "${CMAKE_CURRENT_BINARY_DIR}/doxygen-generated")
+    # todo remove?
     _doxygen_property_add("QUIET" OPTION DEFAULT YES)
     _doxygen_property_add("WARNINGS" OPTION DEFAULT YES)
 endfunction()
@@ -342,19 +343,3 @@ function(_doxygen_params_init)
     _doxygen_params_init_properties()
 endfunction()
 
-##############################################################################
-#.rst:
-#
-# ======================
-# doxygen_add_override
-# ======================
-#
-# .. code-block:: cmake
-#
-#   doxygen_add_override(_path _value)
-#
-# Creates an :ref:`override<overrides-reference-label>` with the given value.
-##############################################################################
-function(doxygen_add_override _path _value)
-    _doxygen_property_add(${_path} DEFAULT "${_value}" OVERWRITE)
-endfunction()

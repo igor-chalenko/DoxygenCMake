@@ -398,7 +398,7 @@ function(_doxygen_inputs_parse)
 endfunction()
 
 function(_doxygen_parse_inputs)
-    _doxygen_init_input_params()
+    #_doxygen_init_input_params()
     # todo rename
     TPA_get(doxygen.updatable.properties _updatable_paths)
     foreach (_path ${_updatable_paths})

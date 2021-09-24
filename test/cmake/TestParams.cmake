@@ -111,9 +111,9 @@ function(test_custom_project_file_2)
 endfunction()
 
 function(test_input_directories_full_1)
-    doxygen_add_override("WARNINGS" OPTION NO)
-    doxygen_add_override("QUIET" OPTION NO)
-    doxygen_add_override("TOC_INCLUDE_HEADINGS" STRING 2)
+    doxygen_add_override("WARNINGS" NO)
+    doxygen_add_override("QUIET" NO)
+    doxygen_add_override("TOC_INCLUDE_HEADINGS" 2)
 
     _doxygen_params_init()
     set(_args INPUT dir1 dir2)
@@ -137,7 +137,7 @@ function(test_input_directories_full_1)
 endfunction()
 
 function(test_input_directories_full_2)
-    doxygen_add_override("WARNINGS" OPTION NO)
+    doxygen_add_override("WARNINGS" NO)
 
     _doxygen_params_init()
     set(_args INPUT_TARGET main)

@@ -85,47 +85,6 @@ function(_doxygen_add_targets _project_file _updated_project_file)
     endif ()
 endfunction()
 
-function(_doxygen_create_generate_project_target)
-    TPA_get("option_args" _option_args)
-    TPA_get("one_value_args" _one_value_args)
-    TPA_get("multi_value_args" _multi_value_args)
-
-    _doxygen_get(PROJECT_FILE _project_file)
-    _doxygen_get(TARGET_NAME _target_name)
-    _doxygen_output_project_file_name(${_project_file} _updated_project_file)
-
-    set (_new_args "")
-    TPA_get(doxygen.updatable.properties _input_properties)
-    foreach(_property ${_input_properties})
-        _doxygen_get(${_property} _value)
-        TPA_get(${_property}_TYPE _type)
-        if (_type STREQUAL OPTION)
-            if (_value STREQUAL "YES")
-                list(APPEND _new_args "-D${_property}=YES ")
-            endif()
-        else()
-            # escape file names
-            #string(REPLACE " " "\\ " _new_value ${_value})
-            list(APPEND _new_args "-D${_property}=\"${_value}\" ")
-        endif()
-    endforeach()
-
-    get_property(_doxygen_dir GLOBAL PROPERTY _doxygen_dir)
-    #message(STATUS "!!! _project_file = ${_project_file}")
-    #message(STATUS "!!! _updated_project_file = ${_updated_project_file}")
-    add_custom_command(
-            VERBATIM
-            OUTPUT "${_updated_project_file}"
-            DEPENDS "${_project_file}"
-            COMMAND ${CMAKE_COMMAND} ${_new_args} -Dproject_dir="${CMAKE_CURRENT_SOURCE_DIR}" -P ${_doxygen_dir}/proto.cmake)
-
-
-message(STATUS "CMake will use: -Dproject_dir=\"${CMAKE_CURRENT_SOURCE_DIR}\" ${_new_args}")
-
-    add_custom_target(${_target_name}.prepare_doxyfile
-            DEPENDS "${_updated_project_file}")
-endfunction()
-
 ##############################################################################
 #.rst:
 # .. cmake:command:: _doxygen_add_target
@@ -161,7 +120,7 @@ function(_doxygen_create_generate_docs_target)
     add_custom_command(OUTPUT ${__stamp_file}
             COMMAND ${CMAKE_COMMAND} -E remove_directory "${_output_dir}"
             MAIN_DEPENDENCY "${_updated_project_file}"
-            DEPENDS ${_inputs}
+            DEPENDS "${_project_file}" "${_inputs}"
             COMMAND Doxygen::doxygen "${_updated_project_file}"
             COMMAND ${CMAKE_COMMAND} -E touch ${__stamp_file}
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -315,8 +274,8 @@ endfunction()
 #
 # These
 ##############################################################################
-function(_doxygen_install_docs)
-    _doxygen_get(general.output-dir _output_dir)
+function(_doxygen_create_install_targets)
+    _doxygen_get(OUTPUT_DIRECTORY _output_dir)
     _doxygen_get(INSTALL_COMPONENT _component)
 
     if (NOT DEFINED CMAKE_INSTALL_DOCDIR)
@@ -328,9 +287,10 @@ function(_doxygen_install_docs)
     _doxygen_list_outputs("${_output_dir}" _files DIRECTORIES)
 
     foreach (_artifact ${_files})
-        _doxygen_log(INFO "install ${_artifact} to ${_destination}...")
-        install(DIRECTORY ${_artifact}
-                DESTINATION ${_destination}
+        string(REPLACE " " "\\ " _new_artifact "${_artifact}")
+        _doxygen_log(INFO "install ${_new_artifact} to ${_destination}...")
+        install(DIRECTORY "${_new_artifact}"
+                DESTINATION "${_destination}"
                 COMPONENT ${_component}
         )
     endforeach ()
@@ -379,15 +339,23 @@ function(_doxygen_list_outputs _option _out_var)
             set(_latex_index_file "${_output_dir}/latex/refman.tex")
             list(APPEND _out "${_latex_index_file}")
         endif ()
-        if (_pdf AND)
+        if (_pdf)
             set(_pdf_file "${_output_dir}/pdf/refman.pdf")
             list(APPEND _out "${_pdf_file}")
         endif ()
     else ()
-        list(APPEND _out "${_output_dir}/latex")
-        list(APPEND _out "${_output_dir}/xml")
-        list(APPEND _out "${_output_dir}/html")
-        list(APPEND _out "${_output_dir}/pdf")
+        if (_latex)
+            list(APPEND _out "${_output_dir}/latex")
+        endif()
+        if (_xml)
+            list(APPEND _out "${_output_dir}/xml")
+        endif()
+        if (_html)
+            list(APPEND _out "${_output_dir}/html")
+        endif()
+        if (_pdf)
+            list(APPEND _out "${_output_dir}/pdf")
+        endif()
     endif ()
 
     set(${_out_var} "${_out}" PARENT_SCOPE)
