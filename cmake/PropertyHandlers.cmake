@@ -188,7 +188,6 @@ endfunction()
 ##############################################################################
 function(_doxygen_update_input_source _paths _out_var)
     set(_inputs "")
-    message(STATUS "!!! input paths before update: ${_paths}")
     if (_paths)
         foreach (_path ${_paths})
             if (NOT IS_ABSOLUTE "${_path}")
@@ -319,8 +318,6 @@ function(_doxygen_set_example_source _out_var)
             "example;examples"
             _example_path
     )
-    message(STATUS "doxygen.project.dir = ${doxygen.project.dir}")
-    message(STATUS "example_path = ${_example_path}")
     set(${_out_var} "${_example_path}" PARENT_SCOPE)
 endfunction()
 
