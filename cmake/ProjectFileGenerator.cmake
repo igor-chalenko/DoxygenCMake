@@ -82,8 +82,8 @@ function(_doxygen_parse_input _out_var _property)
         set(_value "${DOXYGEN_${_property}}")
     endif()
     if (${_property} IN_LIST _option_args)
-        if (_value STREQUAL NO)
-            _doxygen_log(DEBUG "erase the non-option ${_property}")
+        if (_value STREQUAL NO AND NOT _property IN_LIST ARGN)
+            # message(STATUS "erase the non-option ${_property}")
             set(_value "")
         endif()
     endif()
@@ -174,6 +174,7 @@ function(_doxygen_property_add _path _type)
         return()
     endif()
 
+    TPA_set(${_path}_TYPE ${_type})
     if (_type STREQUAL STRING)
         TPA_append(one_value_args ${_path})
         #TPA_set(${_path}_INPUT ${IN_INPUT_STRING})
@@ -223,15 +224,25 @@ function(_doxygen_update_path _path)
     TPA_get(${_path}_SETTER _setter)
     TPA_get(${_path}_UPDATER _updater)
     TPA_get(${_path}_DEFAULT _default)
+    TPA_get(${_path}_TYPE _type)
 
     _doxygen_property_read_input(_input_value ${_path} ${ARGN})
     _doxygen_get(${_path} _project_value)
-    separate_arguments(_project_value)
+    if (_type STREQUAL LIST)
+        separate_arguments(_project_value)
+    endif()
     _doxygen_log(DEBUG "[_doxygen_update_path(${_path})] _input_value = ${_input_value}")
     _doxygen_log(DEBUG "[_doxygen_update_path(${_path})] _project_value = ${_project_value}")
 
     set(_value "")
     if (_input_value STREQUAL "")
+        #_doxygen_log(DEBUG "before applying default: ${_path} = ${_value}")
+        _doxygen_property_apply_default(${_path}
+                "${_default}"
+                "${_value}"
+                "${_input_value}"
+                _value)
+
         _doxygen_property_apply_setter(${_path} "${_setter}" _value)
         if ("${_value}" STREQUAL "")
             set(_value "${_project_value}")
@@ -241,12 +252,6 @@ function(_doxygen_update_path _path)
         _doxygen_property_apply_updater(${_path}
                 "${_updater}"
                 "${_value}"
-                _value)
-        #_doxygen_log(DEBUG "before applying default: ${_path} = ${_value}")
-        _doxygen_property_apply_default(${_path}
-                "${_default}"
-                "${_value}"
-                "${_input_value}"
                 _value)
         #_doxygen_log(DEBUG "after applying default: ${_path} = ${_value}")
 
@@ -289,7 +294,7 @@ function(_doxygen_property_apply_setter _path _name _out_var)
         if ("${_project_value}" STREQUAL "" AND "${_input_value}" STREQUAL "" OR _overwrite)
             # call setter
             _doxygen_log(DEBUG "call setter ${_name}")
-            _doxygen_call(_doxygen_${_name} _new_value)
+            _doxygen_call_2(_doxygen_${_name} _new_value)
             set(${_out_var} ${_new_value} PARENT_SCOPE)
         endif ()
     endif ()
@@ -349,9 +354,15 @@ function(_doxygen_property_apply_default _property
         _default _value _input_value _out_var)
     if (NOT _default STREQUAL "")
         TPA_get(${_property}_OVERWRITE _overwrite)
+        #TPA_get(${_property}_TYPE _type)
         if (NOT _input_value STREQUAL "")
             set(_overwrite false)
         endif ()
+        #if (_value STREQUAL "NO" AND _type STREQUAL OPTION)
+            #message(STATUS "unset the option ${_path}")
+        #    set(_value "")
+        #endif()
+
         if (_value STREQUAL "" OR _overwrite)
             set(${_out_var} "${_default}" PARENT_SCOPE)
         endif ()
@@ -381,6 +392,15 @@ endfunction()
 function(_doxygen_inputs_parse)
     TPA_get(doxygen.updatable.properties _updatable_paths)
 
+    foreach (_path ${_updatable_paths})
+        _doxygen_update_path(${_path} ${ARGN})
+    endforeach()
+endfunction()
+
+function(_doxygen_parse_inputs)
+    #_doxygen_init_input_params()
+    # todo rename
+    TPA_get(doxygen.updatable.properties _updatable_paths)
     foreach (_path ${_updatable_paths})
         _doxygen_update_path(${_path} ${ARGN})
     endforeach()

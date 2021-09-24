@@ -4,11 +4,12 @@ function(test_input_directories_full_3)
     #set(LATEX_FOUND NO)
     doxygen_prepare_doxyfile(INPUT_TARGET main
             INPUT dir1 dir2)
-    doxygen_add_docs(
+    doxygen_add_docs_new(
             INPUT_TARGET main
             INPUT dir1 dir2)
 
-    _doxygen_project_load(${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+    set(_project_file "${CMAKE_CURRENT_BINARY_DIR}/doxyfile.template.txt")
+    _doxygen_project_load("${_project_file}")
     _doxygen_get(INPUT _inputs)
     separate_arguments(_inputs)
     assert_same("${_inputs}"

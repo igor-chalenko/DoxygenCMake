@@ -14,6 +14,28 @@
 # :ref:`doxygen_add_docs` implementation.
 ##############################################################################
 
+function(_doxygen_init_input_params)
+    _doxygen_property_add(PROJECT_FILE STRING
+            SETTER "set_project_file"
+            UPDATER "update_project_file")
+    _doxygen_property_add(INPUT_TARGET STRING SETTER "set_input_target")
+    _doxygen_property_add(TARGET_NAME STRING SETTER "set_target_name")
+    _doxygen_property_add(INPUT LIST
+            UPDATER "update_input_source")
+    _doxygen_property_add(INSTALL_COMPONENT STRING DEFAULT docs)
+    _doxygen_property_add(GENERATE_XML OPTION DEFAULT NO)
+    _doxygen_property_add(GENERATE_HTML STRING DEFAULT YES)
+    _doxygen_property_add(GENERATE_LATEX OPTION
+            UPDATER "update_generate_latex"
+            DEFAULT NO)
+    _doxygen_property_add(GENERATE_PDF OPTION DEFAULT NO)
+    _doxygen_property_add(OUTPUT_DIRECTORY STRING
+            UPDATER "update_output_dir"
+            DEFAULT "${CMAKE_CURRENT_BINARY_DIR}/doxygen-generated")
+    # todo remove?
+    _doxygen_property_add("QUIET" OPTION DEFAULT YES)
+    _doxygen_property_add("WARNINGS" OPTION DEFAULT YES)
+endfunction()
 ##############################################################################
 #.rst:
 #
@@ -27,36 +49,16 @@
 #   ``input`` -> ``json`` -> ``setter`` -> ``updater`` -> ``default``
 ##############################################################################
 function(_doxygen_params_init_properties)
-    get_property(_doxygen_dir GLOBAL PROPERTY _doxygen_dir)
-    if (NOT _doxygen_dir)
-        get_filename_component(_doxygen_dir ${CMAKE_CURRENT_LIST_FILE} PATH)
-    endif()
-
-    # todo
-    _doxygen_property_add(PROJECT_FILE STRING
-            UPDATER "update_project_file"
-            DEFAULT "${_doxygen_dir}/Doxyfile"
-    )
-    _doxygen_property_add(INPUT_TARGET STRING SETTER "set_input_target")
-    _doxygen_property_add(TARGET_NAME STRING SETTER "set_target_name")
-    _doxygen_property_add(INSTALL_COMPONENT STRING DEFAULT docs)
-    _doxygen_property_add(GENERATE_PDF OPTION DEFAULT NO)
-
-    _doxygen_property_add("QUIET" OPTION DEFAULT YES)
-    _doxygen_property_add("WARNINGS" OPTION DEFAULT YES)
     _doxygen_property_add("HAVE_DOT" OPTION SETTER "set_have_dot" OVERWRITE)
     _doxygen_property_add("DOT_PATH" STRING SETTER "set_dot_path" OVERWRITE)
     _doxygen_property_add("DIA_PATH" STRING SETTER "set_dia_path" OVERWRITE)
-    _doxygen_property_add(GENERATE_XML OPTION DEFAULT NO)
-    _doxygen_property_add(GENERATE_LATEX OPTION UPDATER "update_generate_latex"
-            DEFAULT NO)
-    _doxygen_property_add(GENERATE_HTML STRING
-            DEFAULT YES)
-    _doxygen_property_add(OUTPUT_DIRECTORY STRING
-            UPDATER "update_output_dir"
-            DEFAULT "${CMAKE_CURRENT_BINARY_DIR}/doxygen-generated")
-    _doxygen_property_add(INPUT LIST
-            UPDATER "update_input_source")
+    #_doxygen_property_add(GENERATE_XML OPTION DEFAULT NO)
+    #_doxygen_property_add(GENERATE_LATEX OPTION UPDATER "update_generate_latex"
+    #        DEFAULT NO)
+    #_doxygen_property_add(GENERATE_HTML STRING DEFAULT YES)
+    #_doxygen_property_add(OUTPUT_DIRECTORY STRING
+    #        UPDATER "update_output_dir"
+    #        DEFAULT "${CMAKE_CURRENT_BINARY_DIR}/doxygen-generated")
     _doxygen_property_add(EXAMPLE_PATH LIST
             SETTER "set_example_source"
             UPDATER "update_example_source")
@@ -77,7 +79,7 @@ function(_doxygen_params_init_properties)
     _doxygen_property_add("HTML_OUTPUT" OPTION DEFAULT "html" OVERWRITE)
     _doxygen_property_add("HTML_FILE_EXTENSION" STRING DEFAULT ".html" OVERWRITE)
     _doxygen_property_add("XML_OUTPUT" OPTION DEFAULT "xml" OVERWRITE)
-    _doxygen_property_add("INPUT_RECURSIVE" OPTION DEFAULT YES OVERWRITE)
+    _doxygen_property_add("RECURSIVE" OPTION DEFAULT YES OVERWRITE)
     _doxygen_property_add("EXAMPLE_RECURSIVE" OPTION DEFAULT YES OVERWRITE)
 endfunction()
 
@@ -170,15 +172,28 @@ function(_doxygen_project_save _project_file_name)
         TPA_get(${_key} _value)
         string(SUBSTRING ${_key} 13 -1 _key)
         string(APPEND _contents "${_key} =")
-        #_doxygen_log(DEBUG "${_key} = ${_value}")
-        foreach(_val ${_value})
-            string(SUBSTRING "${_value}" 0 1 _first_char)
-            if (_val MATCHES " " AND NOT _first_char STREQUAL "\"")
-                string(APPEND _contents " \"${_val}\"")
-            else()
+        string(SUBSTRING "${_value}" 0 1 _first_char)
+        string(FIND "${_value}" " " _ind)
+        string(FIND "${_value}" "\n" _multiline)
+        string(SUBSTRING "${_value}" 0 1 _first_char)
+        list(LENGTH _value _len)
+
+        if (_ind GREATER -1 AND NOT _first_char STREQUAL "\"" AND _multiline EQUAL -1)
+            string(APPEND _contents "\"")
+        endif()
+        #message(STATUS "!!! _value=${_value}, _len = ${_len}")
+
+        if (${_len} GREATER 1)
+            foreach(_val ${_value})
                 string(APPEND _contents " ${_val}")
-            endif()
-        endforeach()
+            endforeach()
+        else()
+            string(APPEND _contents "${_value}")
+        endif()
+
+        if (_ind GREATER -1 AND NOT _first_char STREQUAL "\"" AND _multiline EQUAL -1)
+            string(APPEND _contents "\"")
+        endif()
         string(APPEND _contents "\n")
     endforeach()
 
@@ -233,7 +248,21 @@ macro(_doxygen_call _id _arg1)
         message(FATAL_ERROR "Unsupported function/macro \"${_id}\"")
     else ()
         set(_helper "${CMAKE_CURRENT_BINARY_DIR}/helpers/macro_helper_${_id}.cmake")
-        file(WRITE "${_helper}" "${_id}(\"${_arg1}\" ${ARGN})\n")
+        if ("${_arg1}" MATCHES "^\"(.+)")
+            file(WRITE "${_helper}" "${_id}(${_arg1} ${ARGN})\n")
+        else()
+            file(WRITE "${_helper}" "${_id}(\"${_arg1}\" ${ARGN})\n")
+        endif()
+        include("${_helper}")
+    endif ()
+endmacro()
+
+macro(_doxygen_call_2 _id _arg1)
+    if (NOT COMMAND ${_id})
+        message(FATAL_ERROR "Unsupported function/macro \"${_id}\"")
+    else ()
+        set(_helper "${CMAKE_CURRENT_BINARY_DIR}/helpers/macro_helper_${_id}.cmake")
+        file(WRITE "${_helper}" "${_id}(${_arg1})\n")
         include("${_helper}")
     endif ()
 endmacro()
@@ -254,9 +283,19 @@ endmacro()
 function(_doxygen_find_directory _base_dir _names _out_var)
     set(_result "")
     foreach (_name ${_names})
-        if (IS_DIRECTORY ${_base_dir}/${_name})
-            _doxygen_log(DEBUG "Found directory ${_base_dir}/${_name}")
-            list(APPEND _result ${_base_dir}/${_name})
+        string(SUBSTRING "${_base_dir}" 0 1 _first_char)
+        if (_first_char STREQUAL "\"")
+            # insert _name inside the quotes
+            string(LENGTH ${_base_dir} _len)
+            math(EXPR _len "${_len} - 2")
+            string(SUBSTRING ${_base_dir} 1 ${_len} _new_base_dir)
+            set(_search_path "${_new_base_dir}/${_name}")
+        else()
+            set(_search_path ${_base_dir}/${_name})
+        endif()
+        if (IS_DIRECTORY "${_search_path}")
+            _doxygen_log(DEBUG "Found directory ${_search_path}")
+            list(APPEND _result ${_search_path})
         endif ()
     endforeach ()
     set(${_out_var} "${_result}" PARENT_SCOPE)
@@ -277,7 +316,10 @@ endfunction()
 function(_doxygen_output_project_file_name _project_file_name _out_var)
     _doxygen_assert_not_empty("${_project_file_name}")
     get_filename_component(_name "${_project_file_name}" NAME)
-    set(${_out_var} ${CMAKE_CURRENT_BINARY_DIR}/${_name} PARENT_SCOPE)
+    if (_name STREQUAL "doxyfile.template.in")
+        set(_name "doxyfile.template.txt")
+    endif()
+    set(${_out_var} "${CMAKE_CURRENT_BINARY_DIR}/${_name}" PARENT_SCOPE)
 endfunction()
 
 ##############################################################################
@@ -294,25 +336,9 @@ endfunction()
 ##############################################################################
 function(_doxygen_params_init)
     # define acceptable input parameters
-    # _doxygen_params_init_inputs()
+    _doxygen_init_input_params()
     # define properties that are processed by the chain of handlers
     # `input` -> `json` -> `setter` -> `updater` -> `default`
     _doxygen_params_init_properties()
 endfunction()
 
-##############################################################################
-#.rst:
-#
-# ======================
-# doxygen_add_override
-# ======================
-#
-# .. code-block:: cmake
-#
-#   doxygen_add_override(_path _value)
-#
-# Creates an :ref:`override<overrides-reference-label>` with the given value.
-##############################################################################
-function(doxygen_add_override _path _value)
-    _doxygen_property_add(${_path} DEFAULT "${_value}" OVERWRITE)
-endfunction()

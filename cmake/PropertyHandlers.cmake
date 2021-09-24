@@ -82,6 +82,16 @@ function(_doxygen_set_makeindex_cmd_name _out_var)
     endif ()
 endfunction()
 
+function(_doxygen_set_project_file _out_var)
+    set(_template "${CMAKE_CURRENT_BINARY_DIR}/doxyfile.template.in")
+    if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/doxyfile.template.in")
+        execute_process(
+           COMMAND ${DOXYGEN_EXECUTABLE} -s -g "${_template}"
+           OUTPUT_QUIET
+           RESULT_VARIABLE _doxygen_tpl_result)
+    endif()
+    set(${_out_var} "${_template}" PARENT_SCOPE)
+endfunction()
 ##############################################################################
 #.rst:
 # .. cmake:command:: _doxygen_update_project_file
@@ -178,7 +188,6 @@ endfunction()
 ##############################################################################
 function(_doxygen_update_input_source _paths _out_var)
     set(_inputs "")
-    #message(STATUS "input paths before update: ${_paths}")
     if (_paths)
         foreach (_path ${_paths})
             if (NOT IS_ABSOLUTE "${_path}")
@@ -190,11 +199,12 @@ function(_doxygen_update_input_source _paths _out_var)
         endforeach ()
     else ()
         _doxygen_get("INPUT_TARGET" _target)
+        # message(STATUS "!!! INPUT_TARGET = ${_target}")
         if (TARGET ${_target})
             get_target_property(_inputs
                     "${_target}"
                     INTERFACE_INCLUDE_DIRECTORIES)
-            _doxygen_log(DEBUG "inputs from ${_input_target}: ${_inputs}")
+            # message(STATUS "!!! inputs from ${_input_target}: ${_inputs}")
         endif ()
     endif ()
 
@@ -211,7 +221,7 @@ function(_doxygen_update_input_source _paths _out_var)
             list(APPEND _result "${_input}")
         endif()
     endforeach()
-     #message(STATUS "input sources after update: ${_result}")
+    #message(STATUS "input sources after update: ${_result}")
     set(${_out_var} "${_result}" PARENT_SCOPE)
 endfunction()
 
@@ -234,7 +244,7 @@ function(_doxygen_update_example_source _directories _out_var)
             if (NOT IS_ABSOLUTE "${_dir}")
                 get_filename_component(_dir
                         "${_dir}" ABSOLUTE
-                        BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+                        BASE_DIR ${doxygen.project.dir})
             endif ()
             list(APPEND _result "${_dir}")
         endforeach ()

@@ -20,20 +20,16 @@ target_include_directories(main PUBLIC include include5)
 
 find_package(Doxygen)
 
-#add_custom_command(
-#        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/DoxypressCMake.json
-#        DEPENDS ${PROJECT_SOURCE_DIR}/test/doc/doxypress.json
-#        COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/proto.cmake)
-
-#add_custom_target(prepare_doxyfile DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/DoxypressCMake.json)
-#doxypress_add_docs(INPUT_TARGET main)
+include(../cmake/FindDoxygenCMake.cmake)
 
 if (NOT DEFINED DOXYGEN_SKIP_TEST OR NOT DOXYGEN_SKIP_TEST)
     message(STATUS "Running tests...")
-    set(DOXYGEN_LOG_LEVEL WARN)
-    include(cmake/TestTPA.cmake)
+    set(DOXYGEN_LOG_LEVEL INFO)
+    #set(doxygen.project.dir "${CMAKE_CURRENT_SOURCE_DIR}")
+    #doxygen_add_docs_new(PROJECT_FILE cmake/Doxyfile INPUT_TARGET main GENERATE_PDF)
+    #include(cmake/TestTPA.cmake)
     include(cmake/TestParams.cmake)
-    include(cmake/TestCreateTargets.cmake)
-    include(cmake/TestAddDocs.cmake)
+    #include(cmake/TestCreateTargets.cmake)
+    #include(cmake/TestAddDocs.cmake)
     #include(TestFindAddDocs.cmake)
 endif()
