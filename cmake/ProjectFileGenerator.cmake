@@ -171,7 +171,6 @@ function(_doxygen_property_add _path _type)
     #message(STATUS "1. _index = ${_index}")
     list(FIND _properties ${_path} _ind)
     if (NOT _ind EQUAL -1)
-        message(STATUS "!!! ${_path} was already added earlier, skipping...")
         return()
     endif()
 

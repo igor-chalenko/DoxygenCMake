@@ -6,7 +6,6 @@
 ##############################################################################
 
 get_filename_component(_doxygen_dir ${CMAKE_CURRENT_LIST_FILE} PATH)
-message(STATUS "!!! _doxygen_dir = ${_doxygen_dir}")
 
 include(${_doxygen_dir}/Logging.cmake)
 include(${_doxygen_dir}/GlobalMap.cmake)
