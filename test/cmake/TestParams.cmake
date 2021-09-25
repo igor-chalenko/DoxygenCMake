@@ -114,6 +114,7 @@ function(test_input_directories_full_1)
     doxygen_add_override("WARNINGS" NO)
     doxygen_add_override("QUIET" NO)
     doxygen_add_override("TOC_INCLUDE_HEADINGS" 2)
+    TPA_get(WARNINGS_OVERWRITE _overwrite)
 
     _doxygen_params_init()
     set(_args INPUT dir1 dir2)

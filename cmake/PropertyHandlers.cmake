@@ -199,12 +199,10 @@ function(_doxygen_update_input_source _paths _out_var)
         endforeach ()
     else ()
         _doxygen_get("INPUT_TARGET" _target)
-        # message(STATUS "!!! INPUT_TARGET = ${_target}")
         if (TARGET ${_target})
             get_target_property(_inputs
                     "${_target}"
                     INTERFACE_INCLUDE_DIRECTORIES)
-            # message(STATUS "!!! inputs from ${_input_target}: ${_inputs}")
         endif ()
     endif ()
 

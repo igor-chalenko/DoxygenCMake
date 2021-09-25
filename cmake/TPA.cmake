@@ -65,14 +65,15 @@ endif()
 # Sets the property with the ``_name`` to a new value of ``_value``.
 ##############################################################################
 function(TPA_set _name _value)
+    set(_prefix "__doxygen.")
     #_TPA_current_scope(_scope)
     #set_property(TARGET ${_scope} PROPERTY INTERFACE_${_name} "${_value}")
 
     TPA_index(_index)
-    list(FIND _index ${_name} _ind)
-    set_property(GLOBAL PROPERTY ${_name} ${_value})
+    list(FIND _index "${_prefix}${_name}" _ind)
+    set_property(GLOBAL PROPERTY "${_prefix}${_name}" ${_value})
     if (_ind EQUAL -1)
-        list(APPEND _index "${_name}")
+        list(APPEND _index "${_prefix}${_name}")
         TPA_set_index("${_index}")
     endif()
 endfunction()
@@ -88,14 +89,15 @@ endfunction()
 # Unsets the property with the name ``_name``.
 ##############################################################################
 function(TPA_unset _name)
+    set(_prefix "__doxygen.")
     #_TPA_current_scope(_scope)
     #set_property(TARGET ${_scope} PROPERTY INTERFACE_${_name})
 
     TPA_index(_index)
-    list(FIND _index ${_name} _ind)
+    list(FIND _index "${_prefix}${_name}" _ind)
     if (NOT _ind EQUAL -1)
-        set_property(GLOBAL PROPERTY ${_name})
-        list(REMOVE_ITEM _index ${_name})
+        set_property(GLOBAL PROPERTY "${_prefix}${_name}")
+        list(REMOVE_ITEM _index "${_prefix}${_name}")
         TPA_set_index("${_index}")
     endif()
 endfunction()
@@ -112,8 +114,8 @@ endfunction()
 # designated by ``_out_var``.
 ##############################################################################
 function(TPA_get _name _out_var)
-    # _TPA_current_scope(_scope)
-    get_property(_value GLOBAL PROPERTY ${_name})
+    set(_prefix "__doxygen.")
+    get_property(_value GLOBAL PROPERTY ${_prefix}${_name})
     list(LENGTH _value _length)
     # message(STATUS "Length of ${_name} is ${_length}")
     if ("${_value}" STREQUAL "_value-NOTFOUND")
@@ -137,15 +139,11 @@ endfunction()
 # set to the given value.
 ##############################################################################
 function(TPA_append _name _value)
-    #_TPA_current_scope(_scope)
     TPA_index(_index)
     #list(FIND _index ${_name} _ind)
 
     # list(APPEND ${_name} ${_values})
     TPA_get(${_name} _current_value)
-    if (_name STREQUAL "histories")
-        #message(STATUS "_current_value = ${_current_value}")
-    endif()
     if ("${_current_value}" STREQUAL "")
         TPA_set(${_name} "${_value}")
         #list(APPEND _index ${_name})
@@ -168,55 +166,14 @@ endfunction()
 # ``TPA_append``.
 ##############################################################################
 function(TPA_clear_scope)
+    set(_prefix "__doxygen.")
+
     TPA_index(_index)
     foreach(_name ${_index})
-        set_property(GLOBAL PROPERTY ${_name})
+        set_property(GLOBAL PROPERTY "${_name}")
     endforeach()
-    set_property(GLOBAL PROPERTY property.index)
-endfunction()
-
-##############################################################################
-#.rst:
-# .. cmake:command:: _TPA_current_scope
-#
-# .. code-block:: cmake
-#
-#    _TPA_current_scope(_out_var)
-#
-# Defines what the current scope is. Upon the first invocation in the current
-# `CMake` source directory, creates an `INTERFACE` target with a name derived
-# from the value of ``${CMAKE_SOURCE_DIR}``. Afterward, this name is written
-# into the output variable ``_out_var`` in the parent scope. This function is
-# used by other `TPA` functions to obtain the current TPA scope; it's not
-# meant to be used outside the module.
-##############################################################################
-function(_TPA_current_scope _out_var)
-    _TPA_scope_name(_scope_name)
-
-    if (NOT TARGET ${_scope_name})
-        add_library(${_scope_name} INTERFACE)
-        _doxygen_log(DEBUG "Created INTERFACE target ${_scope_name}")
-    endif()
-    set(${_out_var} "${_scope_name}" PARENT_SCOPE)
-endfunction()
-
-##############################################################################
-#.rst:
-# .. cmake:command:: _TPA_scope_name
-#
-# .. code-block:: cmake
-#
-#    _TPA_scope_name(_out_var)
-#
-# Implements a scope naming scheme.
-#
-# This function should not be used anywhere except in `_TPA_current_scope`.
-##############################################################################
-function(_TPA_scope_name _out_var)
-    string(REPLACE " " "." _replaced "${CMAKE_SOURCE_DIR}_${_random_id}")
-    string(REPLACE "/" "." _replaced "${_replaced}")
-    string(REPLACE "\\" "." _replaced "${_replaced}")
-    set(${_out_var} "${_replaced}.properties" PARENT_SCOPE)
+    set_property(GLOBAL PROPERTY ${_prefix}property.index)
+    TPA_get(doxygen.updatable.properties _input_properties)
 endfunction()
 
 ##############################################################################
@@ -231,9 +188,9 @@ endfunction()
 # in the parent scope.
 ##############################################################################
 function(TPA_index _out_var)
-    TPA_get(property.index _index_xx)
+    TPA_get(property.index _index)
     #message(STATUS "_index_xx = ${_index_xx}")
-    set(${_out_var} "${_index_xx}" PARENT_SCOPE)
+    set(${_out_var} "${_index}" PARENT_SCOPE)
 endfunction()
 
 ##############################################################################
@@ -243,10 +200,6 @@ endfunction()
 # Replace the current TPA scope's index by the list given by ``_index``.
 ##############################################################################
 function(TPA_set_index _index)
-    #TPA_set(${_DOXYPRESS_TPA_INDEX_KEY} "${_index}")
-    set_property(GLOBAL PROPERTY property.index "${_index}")
-    list(LENGTH _index _len)
-    #if (_len EQUAL 1)
-    #    message(SEND_ERROR "index length is ${_len}")
-    #endif()
+    set(_prefix "__doxygen.")
+    set_property(GLOBAL PROPERTY ${_prefix}property.index "${_index}")
 endfunction()

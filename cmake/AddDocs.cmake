@@ -275,7 +275,6 @@ function(doxygen_add_docs_new)
     # get the project file name
     _doxygen_get(PROJECT_FILE _project_file)
     #_doxygen_get(INPUT _input)
-    #message(STATUS "!!! _input = ${_input}")
 
     #_doxygen_output_project_file_name(${_project_file} _updated_project_file)
 

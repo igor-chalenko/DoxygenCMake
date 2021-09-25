@@ -181,7 +181,6 @@ function(_doxygen_project_save _project_file_name)
         if (_ind GREATER -1 AND NOT _first_char STREQUAL "\"" AND _multiline EQUAL -1)
             string(APPEND _contents "\"")
         endif()
-        #message(STATUS "!!! _value=${_value}, _len = ${_len}")
 
         if (${_len} GREATER 1)
             foreach(_val ${_value})
