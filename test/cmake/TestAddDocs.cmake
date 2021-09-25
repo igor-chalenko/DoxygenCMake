@@ -14,7 +14,7 @@ function(test_input_directories_full_3)
     separate_arguments(_inputs)
     assert_same("${_inputs}"
             "${CMAKE_CURRENT_SOURCE_DIR}/dir1;${CMAKE_CURRENT_SOURCE_DIR}/dir2")
-    TPA_clear_scope()
+    global_map_clear_scope()
 endfunction()
 
 set(doxygen.project.dir "${CMAKE_CURRENT_SOURCE_DIR}")

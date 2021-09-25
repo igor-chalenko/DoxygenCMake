@@ -8,7 +8,7 @@
 get_filename_component(_doxygen_dir ${CMAKE_CURRENT_LIST_FILE} PATH)
 
 include(${_doxygen_dir}/Logging.cmake)
-include(${_doxygen_dir}/TPADoxygen.cmake)
+include(${_doxygen_dir}/GlobalMap.cmake)
 include(${_doxygen_dir}/CMakeTargetGenerator.cmake)
 include(${_doxygen_dir}/ProjectFileGenerator.cmake)
 include(${_doxygen_dir}/ProjectFunctions.cmake)
@@ -237,7 +237,7 @@ include(${_doxygen_dir}/PropertyHandlers.cmake)
 # .. _json-cmake: https://github.com/sbellus/json-cmake
 ##############################################################################
 function(doxygen_add_docs_2)
-    TPA_set("add.docs.args" "${ARGN}")
+    global_map_set("add.docs.args" "${ARGN}")
     # initialize parameter/property descriptions
     _doxygen_params_init()
     # parse input arguments
@@ -256,17 +256,17 @@ function(doxygen_add_docs_2)
     endif ()
 
     # clear up the TPA scope created by this function
-    TPA_clear_scope()
+    global_map_clear_scope()
 endfunction()
 
 function(doxygen_add_docs_new)
-    TPA_set("add.docs.args" "${ARGN}")
+    global_map_set("add.docs.args" "${ARGN}")
     set("doxygen.project.dir" "${CMAKE_CURRENT_SOURCE_DIR}")
     _doxygen_params_init()
     # parse input arguments
     _doxygen_parse_inputs(${ARGN})
 
-    TPA_get(doxygen.updatable.properties _input_properties)
+    global_map_get(doxygen.updatable.properties _input_properties)
     #foreach(_property ${_input_properties})
         #_doxygen_get(${_property} _value)
         #message(STATUS "obtained ${_property} = ${_value}")
@@ -294,7 +294,7 @@ function(doxygen_add_docs_new)
     endif ()
 
     # clear up the TPA scope created by this function
-    TPA_clear_scope()
+    global_map_clear_scope()
 endfunction()
 
 function(doxygen_prepare_doxyfile)
@@ -312,11 +312,11 @@ function(doxygen_prepare_doxyfile)
 
     _doxygen_project_update(_updated_project_file "${_project_file}" ${ARGN})
     # clear up the TPA scope created by this function
-    TPA_clear_scope()
+    global_map_clear_scope()
 endfunction()
 
 function(doxygen_add_docs)
-    TPA_set("add.docs.args" "${ARGN}")
+    global_map_set("add.docs.args" "${ARGN}")
     # initialize input parameters
     _doxygen_input_params_init()
     # parse input arguments
@@ -335,7 +335,7 @@ function(doxygen_add_docs)
     endif ()
 
     # clear up the TPA scope created by this function
-    TPA_clear_scope()
+    global_map_clear_scope()
 endfunction()
 
 ##############################################################################
