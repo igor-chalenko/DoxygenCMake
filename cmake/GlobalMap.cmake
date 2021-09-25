@@ -173,7 +173,6 @@ function(global_map_clear_scope)
         set_property(GLOBAL PROPERTY "${_name}")
     endforeach()
     set_property(GLOBAL PROPERTY ${_prefix}property.index)
-    message(STATUS "!!! global_map_clear_scope()")
     global_map_get(doxygen.updatable.properties _input_properties)
 endfunction()
 

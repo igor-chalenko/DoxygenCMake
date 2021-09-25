@@ -24,7 +24,7 @@ include(../cmake/FindDoxygenCMake.cmake)
 
 if (NOT DEFINED DOXYGEN_SKIP_TEST OR NOT DOXYGEN_SKIP_TEST)
     message(STATUS "Running tests...")
-    set(DOXYGEN_LOG_LEVEL DEBUG)
+    set(DOXYGEN_LOG_LEVEL WARN)
     #set(doxygen.project.dir "${CMAKE_CURRENT_SOURCE_DIR}")
     #doxygen_add_docs_new(PROJECT_FILE cmake/Doxyfile INPUT_TARGET main GENERATE_PDF)
     #include(cmake/TestTPA.cmake)
