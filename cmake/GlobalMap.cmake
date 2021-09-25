@@ -5,12 +5,6 @@
 # https://opensource.org/licenses/MIT
 ##############################################################################
 
-get_property(_include_guard GLOBAL PROPERTY TPA_CMAKE_INCLUDE_GUARD)
-if (NOT _include_guard)
-    set_property(GLOBAL PROPERTY TPA_CMAKE_INCLUDE_GUARD ON)
-else()
-    return()
-endif()
 ##############################################################################
 #.rst:
 # Target Property Accessors (TPA)
