@@ -8,7 +8,7 @@
 get_filename_component(_doxygen_dir ${CMAKE_CURRENT_LIST_FILE} PATH)
 
 include(${_doxygen_dir}/Logging.cmake)
-include(${_doxygen_dir}/TPA.cmake)
+include(${_doxygen_dir}/TPADoxygen.cmake)
 include(${_doxygen_dir}/CMakeTargetGenerator.cmake)
 include(${_doxygen_dir}/ProjectFileGenerator.cmake)
 include(${_doxygen_dir}/ProjectFunctions.cmake)
