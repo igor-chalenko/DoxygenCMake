@@ -100,7 +100,7 @@ endfunction()
 macro(_doxygen_project_update _out_var _input_project_file_name)
     _doxygen_project_load(${_input_project_file_name})
 
-    TPA_get(doxygen.updatable.properties _updatable_paths)
+    doxygen_global_get(doxygen.updatable.properties _updatable_paths)
 
     foreach (_path ${_updatable_paths})
         _doxygen_update_path(${_path} ${ARGN})
@@ -130,8 +130,8 @@ endmacro()
 # ``doxygen.``.
 ##############################################################################
 function(_doxygen_project_load _project_file_name)
-    TPA_unset(doxygen.project)
-    _doxygen_log(INFO "Loading project template ${_project_file_name}...")
+    doxygen_global_unset(doxygen.project)
+    log_info(_doxygen_project_load "Loading project template ${_project_file_name}...")
 
     file(STRINGS "${_project_file_name}" _file_lines)
     foreach(_line IN LISTS _file_lines)
@@ -144,8 +144,9 @@ function(_doxygen_project_load _project_file_name)
             string(STRIP ${_key} _key)
             string(STRIP "${_value}" _value)
             set(_key "project.file.${_key}")
-            TPA_set(${_key} "${_value}")
-            TPA_append(doxygen.project ${_key})
+
+            doxygen_global_set(${_key} "${_value}")
+            doxygen_global_append(doxygen.project ${_key})
         endif()
     endforeach()
 endfunction()
@@ -165,11 +166,11 @@ endfunction()
 ##############################################################################
 function(_doxygen_project_save _project_file_name)
     _doxygen_assert_not_empty("${_project_file_name}")
-    TPA_get(doxygen.project _variables)
+    doxygen_global_get(doxygen.project _variables)
 
     unset(_contents)
     foreach(_key IN LISTS _variables)
-        TPA_get(${_key} _value)
+        doxygen_global_get(${_key} _value)
         string(SUBSTRING ${_key} 13 -1 _key)
         string(APPEND _contents "${_key} =")
         string(SUBSTRING "${_value}" 0 1 _first_char)
@@ -212,8 +213,8 @@ endfunction()
 #    _doxygen_get(_path _out_var)
 #
 ##############################################################################
-function(_doxygen_get _path _out_var)
-    TPA_get(project.file.${_path} _value)
+function(_doxygen_get _property _out_var)
+    global_get(project.file. ${_property} _value)
     set(${_out_var} "${_value}" PARENT_SCOPE)
 endfunction()
 
@@ -228,7 +229,7 @@ endfunction()
 #    _doxygen_set(_path _value)
 ##############################################################################
 function(_doxygen_set _property _value)
-    TPA_set(project.file.${_property} "${_value}")
+    global_set(project.file. ${_property} "${_value}")
 endfunction()
 
 ##############################################################################

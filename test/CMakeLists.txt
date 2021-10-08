@@ -1,34 +1,29 @@
-set(_doxypress_dir ${PROJECT_SOURCE_DIR}/cmake)
+project(doxygen-cmake-test VERSION 0.1)
+
+set(_doxygen_dir ${PROJECT_SOURCE_DIR}/../cmake)
 #include(../cmake/AddDocs.cmake)
-
-# _doxypress_project_load(DoxypressTest1.json)
-function(assert_same str1 str2)
-    if (NOT "${str1}" STREQUAL "${str2}")
-        message(SEND_ERROR "`${str1}` is not the same as `${str2}`")
-    endif ()
-endfunction()
-
-function(assert_list_contains list1 el)
-    if (NOT "${el}" IN_LIST list1)
-        message(SEND_ERROR "${el} is not contained in ${list1}")
-    endif ()
-endfunction()
 
 add_executable(main src/main.cc)
 set_target_properties(main PROPERTIES EXCLUDE_FROM_ALL 1)
 target_include_directories(main PUBLIC include include5)
 
-find_package(Doxygen)
+add_test(
+        NAME dynamic_functions_test
+        COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/GlobalMapTest.cmake
+)
 
-include(../cmake/FindDoxygenCMake.cmake)
+add_test(
+        NAME parameter_test
+        COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/ParameterTest.cmake
+)
 
-if (NOT DEFINED DOXYGEN_SKIP_TEST OR NOT DOXYGEN_SKIP_TEST)
+if (TRUE)
     message(STATUS "Running tests...")
     set(DOXYGEN_LOG_LEVEL INFO)
     #set(doxygen.project.dir "${CMAKE_CURRENT_SOURCE_DIR}")
     #doxygen_add_docs_new(PROJECT_FILE cmake/Doxyfile INPUT_TARGET main GENERATE_PDF)
-    #include(cmake/TestTPA.cmake)
-    include(cmake/TestParams.cmake)
+    #include(cmake/GlobalMapTest.cmake)
+    #include(cmake/ParameterTest.cmake)
     #include(cmake/TestCreateTargets.cmake)
     #include(cmake/TestAddDocs.cmake)
     #include(TestFindAddDocs.cmake)
