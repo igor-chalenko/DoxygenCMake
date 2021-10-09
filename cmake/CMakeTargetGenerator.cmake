@@ -111,7 +111,7 @@ function(_doxygen_create_generate_docs_target)
     _doxygen_output_project_file_name(${_project_file} _updated_project_file)
     # collect inputs for `DEPENDS` parameter
     _doxygen_list_inputs(_inputs)
-    _doxygen_assert_not_empty("${_inputs}")
+    assert_not_empty("${_inputs}")
     # collect outputs for the `OUTPUTS` parameter
     _doxygen_list_outputs("${_output_dir}" _files FILES)
 
@@ -250,7 +250,7 @@ endfunction()
 # * ``_file`` a file to open, such as `index.html`
 ##############################################################################
 function(_doxygen_create_open_target _target_name _parent_target_name _file)
-    _doxygen_log(INFO "Adding launch target ${_target_name} for ${_file}...")
+    log_info(doxygen "Adding launch target ${_target_name} for ${_file}...")
     add_custom_target(${_target_name}
             COMMAND ${DOXYGEN_LAUNCHER_COMMAND} "${_file}"
             COMMENT "Opening ${_file}..."
@@ -388,10 +388,10 @@ function(_doxygen_list_inputs _out_var)
             if (IS_DIRECTORY ${_dir})
                 file(GLOB_RECURSE _inputs ${_dir}/*)
                 list(APPEND _all_inputs "${_inputs}")
-                message(STATUS "1. appending inputs ${_inputs}")
+                log_debug(_doxygen_list_inputs "1. appending inputs ${_inputs}")
             else ()
                 list(APPEND _all_inputs "${_dir}")
-                message(STATUS "2. appending inputs ${_dir}")
+                log_debug(_doxygen_list_inputs "2. appending inputs ${_dir}")
             endif ()
         endforeach ()
     elseif (_input_target)
@@ -401,7 +401,7 @@ function(_doxygen_list_inputs _out_var)
         foreach (_dir ${_include_directories})
             file(GLOB_RECURSE _inputs "${_dir}/*")
             list(APPEND _all_inputs "${_inputs}")
-            message(STATUS "3. appending inputs ${_inputs} from ${_dir}")
+            log_debug(_doxygen_list_inputs "3. appending inputs ${_inputs} from ${_dir}")
         endforeach ()
     else ()
         message(FATAL_ERROR [=[
@@ -411,6 +411,6 @@ for `doxygen_add_docs`:
 2) Input project file didn't specify any inputs either.]=])
     endif ()
 
-    message(STATUS "!!! _all_inputs = ${_all_inputs}")
+    log_debug(_doxygen_list_inputs "_all_inputs: ${_all_inputs}")
     set(${_out_var} "${_all_inputs}" PARENT_SCOPE)
 endfunction()

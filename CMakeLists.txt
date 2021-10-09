@@ -3,7 +3,6 @@ project(DoxygenCMake VERSION 0.1 DESCRIPTION "Doxygen module for CMake")
 
 if (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME)
     include(cmake/InstallBasicPackageFiles.cmake)
-    include(cmake/Submodules.cmake)
 
     enable_testing()
     add_subdirectory(test)

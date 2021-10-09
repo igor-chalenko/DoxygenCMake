@@ -139,13 +139,14 @@ function(_doxygen_project_load _project_file_name)
             set(_key "${CMAKE_MATCH_1}")
             set(_eql "${CMAKE_MATCH_2}")
             set(_value "${CMAKE_MATCH_3}")
+            string(REPLACE "\"" "\\\\\"" _value "${_value}")
             string(REPLACE "\\" "\\\\" _value "${_value}")
             string(REPLACE ";" "\\\n" _value "${_value}")
             string(STRIP ${_key} _key)
             string(STRIP "${_value}" _value)
             set(_key "project.file.${_key}")
 
-            doxygen_global_set(${_key} "${_value}")
+            global_set(doxygen ${_key} "${_value}")
             doxygen_global_append(doxygen.project ${_key})
         endif()
     endforeach()
@@ -165,7 +166,7 @@ endfunction()
 # the same name is overwritten.
 ##############################################################################
 function(_doxygen_project_save _project_file_name)
-    _doxygen_assert_not_empty("${_project_file_name}")
+    assert_not_empty("${_project_file_name}")
     doxygen_global_get(doxygen.project _variables)
 
     unset(_contents)
@@ -198,7 +199,7 @@ function(_doxygen_project_save _project_file_name)
         string(APPEND _contents "\n")
     endforeach()
 
-    _doxygen_log(INFO "Saving project file ${_project_file_name}...")
+    log_info(doxygen-cmake "Saving project file ${_project_file_name}...")
     file(WRITE "${_project_file_name}" "${_contents}")
 endfunction()
 
@@ -214,7 +215,7 @@ endfunction()
 #
 ##############################################################################
 function(_doxygen_get _property _out_var)
-    global_get(project.file. ${_property} _value)
+    doxygen_global_get(project.file.${_property} _value)
     set(${_out_var} "${_value}" PARENT_SCOPE)
 endfunction()
 
@@ -229,7 +230,7 @@ endfunction()
 #    _doxygen_set(_path _value)
 ##############################################################################
 function(_doxygen_set _property _value)
-    global_set(project.file. ${_property} "${_value}")
+    doxygen_global_set(project.file.${_property} "${_value}")
 endfunction()
 
 ##############################################################################
@@ -315,7 +316,7 @@ endfunction()
 # *CMAKE_CURRENT_BINARY_DIR* while leaving the file name unchanged.
 ##############################################################################
 function(_doxygen_output_project_file_name _project_file_name _out_var)
-    _doxygen_assert_not_empty("${_project_file_name}")
+    assert_not_empty("${_project_file_name}")
     get_filename_component(_name "${_project_file_name}" NAME)
     if (_name STREQUAL "doxyfile.template.in")
         set(_name "doxyfile.template.txt")

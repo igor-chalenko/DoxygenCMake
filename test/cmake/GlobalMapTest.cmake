@@ -1,9 +1,7 @@
-set(_project_source_dir "${CMAKE_CURRENT_BINARY_DIR}/../../")
-
-include(${_project_source_dir}/externals/cmake-utilities/cmake/Testing.cmake)
-include(${_project_source_dir}/externals/cmake-utilities/cmake/GlobalMap.cmake)
-include(${_project_source_dir}/externals/cmake-utilities/cmake/DynamicFunctions.cmake)
-include(${_project_source_dir}/externals/cmake-utilities/cmake/Logging.cmake)
+include(Testing)
+include(GlobalMap)
+include(DynamicFunctions)
+include(Logging)
 
 function(test_get_set_append)
     doxygen_global_set(property "value")
@@ -36,4 +34,3 @@ parameter_to_function_prefix(doxygen
 
 test_get_set_append()
 test_clear()
-

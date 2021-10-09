@@ -1,11 +1,5 @@
-set(_project_source_dir "${CMAKE_CURRENT_BINARY_DIR}/../../")
+set(_project_source_dir "${CMAKE_CURRENT_BINARY_DIR}/../..")
 
-include(${_project_source_dir}/externals/cmake-utilities/cmake/Testing.cmake)
-include(${_project_source_dir}/externals/cmake-utilities/cmake/GlobalMap.cmake)
-include(${_project_source_dir}/externals/cmake-utilities/cmake/DynamicFunctions.cmake)
-include(${_project_source_dir}/externals/cmake-utilities/cmake/Logging.cmake)
-
-list(APPEND CMAKE_MODULE_PATH "${_project_source_dir}/externals/cmake-utilities/cmake")
 include(${_project_source_dir}/cmake/AddDocs.cmake)
 
 function(test_input_flags_1)
@@ -39,12 +33,11 @@ endfunction()
 
 # give input directories as input and read them back
 function(test_input_directories_1)
-    TPA_index(_index)
     _doxygen_params_init()
 
     set(_args INPUT dir1/dir3 dir2)
     _doxygen_inputs_parse(${_args})
-    _doxygen_project_update(_out cmake/Doxyfile ${_args})
+    _doxygen_project_update(_out  ${_project_source_dir}/test/cmake/Doxyfile ${_args})
 
     _doxygen_get("INPUT" _inputs)
     assert_same("${_inputs}"
@@ -58,7 +51,7 @@ function(test_input_directories_2)
     _doxygen_params_init()
     set(_args PROJECT_FILE Doxyfile2 INPUT x)
     _doxygen_inputs_parse(${_args})
-    _doxygen_project_update(_out cmake/Doxyfile2 ${_args})
+    _doxygen_project_update(_out  ${_project_source_dir}/test/cmake/Doxyfile2 ${_args})
 
     _doxygen_get("INPUT" _inputs)
     assert_same("${_inputs}" "${CMAKE_CURRENT_SOURCE_DIR}/x")
@@ -68,9 +61,9 @@ endfunction()
 # includes are taken from the input target
 function(test_input_directories_3)
     _doxygen_params_init()
-    set(_args INPUT_TARGET main)
+    set(_args INPUT include include5)
     _doxygen_inputs_parse(${_args})
-    _doxygen_project_update(_out cmake/Doxyfile ${_args})
+    _doxygen_project_update(_out  ${_project_source_dir}/test/cmake/Doxyfile ${_args})
 
     _doxygen_get(INPUT _inputs)
     assert_same("${_inputs}"
@@ -82,7 +75,7 @@ function(test_output_directory)
     _doxygen_params_init()
     set(_args PROJECT_FILE Doxyfile2 OUTPUT_DIRECTORY "docs2")
     _doxygen_inputs_parse(${_args})
-    _doxygen_project_update(_out cmake/Doxyfile2 ${_args})
+    _doxygen_project_update(_out  ${_project_source_dir}/test/cmake/Doxyfile2 ${_args})
 
     _doxygen_get("OUTPUT_DIRECTORY" _output)
     assert_same("${_output}" "${CMAKE_CURRENT_BINARY_DIR}/docs2")
@@ -94,7 +87,7 @@ function(test_custom_project_file_1)
     set(_args PROJECT_FILE cmake/Doxyfile2)
     _doxygen_inputs_parse(${_args})
 
-    _doxygen_project_update(_out cmake/Doxyfile2 ${_args})
+    _doxygen_project_update(_out  ${_project_source_dir}/test/cmake/Doxyfile2 ${_args})
 
     _doxygen_get("PROJECT_FILE" _project_file)
     _doxygen_get("OUTPUT_DIRECTORY" _output)
@@ -110,9 +103,9 @@ endfunction()
 
 function(test_custom_project_file_2)
     _doxygen_params_init()
-    set(_args PROJECT_FILE cmake/Doxyfile2 EXAMPLE_PATH x1 x2)
+    set(_args PROJECT_FILE ${_project_source_dir}/test/cmake/Doxyfile2 EXAMPLE_PATH x1 x2)
     _doxygen_inputs_parse(${_args})
-    _doxygen_project_update(_out cmake/Doxyfile2 ${_args})
+    _doxygen_project_update(_out ${_project_source_dir}/test/cmake/Doxyfile2 ${_args})
 
     _doxygen_get("EXAMPLE_PATH" _examples)
     assert_same("${_examples}"
@@ -128,7 +121,7 @@ function(test_input_directories_full_1)
     _doxygen_params_init()
     set(_args INPUT dir1 dir2)
     _doxygen_inputs_parse(${_args})
-    _doxygen_project_update(_out cmake/Doxyfile ${_args})
+    _doxygen_project_update(_out ${_project_source_dir}/test/cmake/Doxyfile ${_args})
 
     _doxygen_project_load(${_out})
     _doxygen_get("INPUT" _inputs)
@@ -146,35 +139,15 @@ function(test_input_directories_full_1)
     doxygen_global_clear()
 endfunction()
 
-function(test_input_directories_full_2)
-    doxygen_add_override("WARNINGS" NO)
-
-    _doxygen_params_init()
-    set(_args INPUT_TARGET main)
-    _doxygen_inputs_parse(${_args})
-    _doxygen_project_update(_out cmake/Doxyfile ${_args})
-
-    _doxygen_project_load(${_out})
-
-    _doxygen_get(INPUT _inputs)
-
-    separate_arguments(_inputs)
-    assert_same("${_inputs}"
-            "${CMAKE_CURRENT_SOURCE_DIR}/include;${CMAKE_CURRENT_SOURCE_DIR}/include5")
-    _doxygen_get("WARNINGS" _warnings)
-    assert_same(${_warnings} NO)
-    doxygen_global_clear()
-endfunction()
-
 # Make sure LATEX module is imported when GENERATE_LATEX is true.
 # Will only perform the tests if latex is installed.
 function(test_latex_find_package)
     _doxygen_params_init()
     set(_args GENERATE_LATEX)
     _doxygen_parse_inputs(${_args})
-    _doxygen_project_update(_out cmake/Doxyfile ${_args})
+    _doxygen_project_update(_out ${_project_source_dir}/test/cmake/Doxyfile ${_args})
 
-    TPA_get(LATEX_FOUND _latex_found)
+    doxygen_global_get(LATEX_FOUND _latex_found)
     if (_latex_found STREQUAL "")
         _doxygen_assert_fail("LATEX_FOUND not set")
     endif()
@@ -185,12 +158,11 @@ set(doxygen.project.dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
 test_input_flags_1()
 test_input_flags_2()
-#test_input_directories_1()
-#test_input_directories_2()
-#test_input_directories_3()
-#test_output_directory()
-#test_custom_project_file_1()
-#test_custom_project_file_2()
-#test_input_directories_full_1()
-#test_input_directories_full_2()
-#test_latex_find_package()
+test_input_directories_1()
+test_input_directories_2()
+test_input_directories_3()
+test_output_directory()
+test_custom_project_file_1()
+test_custom_project_file_2()
+test_input_directories_full_1()
+test_latex_find_package()

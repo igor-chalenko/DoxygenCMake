@@ -7,14 +7,27 @@ add_executable(main src/main.cc)
 set_target_properties(main PROPERTIES EXCLUDE_FROM_ALL 1)
 target_include_directories(main PUBLIC include include5)
 
+find_package(cmake-utilities REQUIRED)
+
 add_test(
-        NAME dynamic_functions_test
-        COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/GlobalMapTest.cmake
+        NAME global_map_test
+        COMMAND ${CMAKE_COMMAND}
+        -DCMAKE_MODULE_PATH=${CMAKE_UTILITIES_CMAKE_MODULE_PATH}
+        -P ${PROJECT_SOURCE_DIR}/cmake/GlobalMapTest.cmake
 )
 
 add_test(
         NAME parameter_test
-        COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/ParameterTest.cmake
+        COMMAND ${CMAKE_COMMAND}
+        -DCMAKE_MODULE_PATH=${CMAKE_UTILITIES_CMAKE_MODULE_PATH}
+        -P ${PROJECT_SOURCE_DIR}/cmake/ParameterTest.cmake
+)
+
+add_test(
+        NAME create_targets_test
+        COMMAND ${CMAKE_COMMAND}
+        -DCMAKE_MODULE_PATH=${CMAKE_UTILITIES_CMAKE_MODULE_PATH}
+        -P ${PROJECT_SOURCE_DIR}/cmake/CreateTargetsTest.cmake
 )
 
 if (TRUE)
@@ -24,7 +37,7 @@ if (TRUE)
     #doxygen_add_docs_new(PROJECT_FILE cmake/Doxyfile INPUT_TARGET main GENERATE_PDF)
     #include(cmake/GlobalMapTest.cmake)
     #include(cmake/ParameterTest.cmake)
-    #include(cmake/TestCreateTargets.cmake)
+    #include(cmake/CreateTargetsTest.cmake)
     #include(cmake/TestAddDocs.cmake)
     #include(TestFindAddDocs.cmake)
 endif()
