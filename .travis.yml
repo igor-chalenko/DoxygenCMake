@@ -1,0 +1,21 @@
+language: cpp
+sudo: required
+dist: bionic
+compiler:
+  - clang
+os:
+  - linux
+branches:
+  only:
+    - master
+script:
+  - cmake --version
+  - git clone https://github.com/igor-chalenko/cmake-utilities.git
+  - cd cmake-utilities
+  - mkdir build && cd build
+  - cmake ..
+  - make test install
+  - cd ..
+  - mkdir build && cd build
+  - cmake ..
+  - make test
