@@ -7,6 +7,61 @@
 
 ##############################################################################
 #.rst:
+# .. cmake:command:: _doxygen_output_project_file_name
+#
+# ..  code-block:: cmake
+#
+#   _doxygen_output_project_file_name(_project_file_name _out_var)
+#
+# Generates an output project file's name, given the input name.
+# Replaces th path to input project file ``_project_file_name`` by
+# *CMAKE_CURRENT_BINARY_DIR* while leaving the file name unchanged.
+##############################################################################
+function(_doxygen_output_project_file_name _project_file_name _out_var)
+    assert_not_empty("${_project_file_name}")
+    get_filename_component(_name "${_project_file_name}" NAME)
+    if (_name STREQUAL "doxyfile.template.in")
+        set(_name "doxyfile.template.txt")
+    endif()
+    set(${_out_var} "${CMAKE_CURRENT_BINARY_DIR}/${_name}" PARENT_SCOPE)
+endfunction()
+
+##############################################################################
+#.rst:
+#
+# .. cmake:command:: _doxygen_find_directory
+#
+# .. code-block:: cmake
+#
+#   _doxygen_find_directory(_base_dir _names _out_var)
+#
+# Searches for a directory with a name from ``_names``, starting from
+# ``_base_dir``. Sets the output variable ``_out_var`` to contain absolute
+# path of every found directory.
+##############################################################################
+function(_doxygen_find_directory _base_dir _names _out_var)
+    set(_result "")
+    foreach (_name ${_names})
+        string(SUBSTRING "${_base_dir}" 0 1 _first_char)
+        if (_first_char STREQUAL "\"")
+            # insert _name inside the quotes
+            string(LENGTH ${_base_dir} _len)
+            math(EXPR _len "${_len} - 2")
+            string(SUBSTRING ${_base_dir} 1 ${_len} _new_base_dir)
+            set(_search_path "${_new_base_dir}/${_name}")
+        else()
+            set(_search_path ${_base_dir}/${_name})
+        endif()
+        if (IS_DIRECTORY "${_search_path}")
+            _doxygen_log(DEBUG "Found directory ${_search_path}")
+            list(APPEND _result ${_search_path})
+        endif ()
+    endforeach ()
+    set(${_out_var} "${_result}" PARENT_SCOPE)
+endfunction()
+
+##############################################################################
+#.rst:
 # Setters and updaters
 # --------------------
 #
@@ -85,6 +140,7 @@ endfunction()
 function(_doxygen_set_project_file _out_var)
     set(_template "${CMAKE_CURRENT_BINARY_DIR}/doxyfile.template.in")
     if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/doxyfile.template.in")
+        log_debug(doxygen "Create default `project doxyfile.template.in` in `${CMAKE_CURRENT_BINARY_DIR}`")
         execute_process(
            COMMAND ${DOXYGEN_EXECUTABLE} -s -g "${_template}"
            OUTPUT_QUIET
@@ -104,14 +160,12 @@ endfunction()
 # needed, and puts the result into ``_out_var``. Does nothing otherwise.
 ##############################################################################
 function(_doxygen_update_project_file _file_name _out_var)
-    if ("${_file_name}" STREQUAL "")
-        set(${_out_var} "" PARENT_SCOPE)
-        return()
-    endif()
+    assert_not_empty("${_file_name}")
     set(_result "")
     if (NOT IS_ABSOLUTE "${_file_name}")
         get_filename_component(_result
-                "${_file_name}" ABSOLUTE BASE_DIR "${doxygen.project.dir}")
+                "${_file_name}" ABSOLUTE BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+        log_debug(doxygen-cmake "setting ${_out_var} to ${_result}")
         set(${_out_var} "${_result}" PARENT_SCOPE)
     else()
         set(${_out_var} "${_file_name}" PARENT_SCOPE)
@@ -189,22 +243,22 @@ endfunction()
 function(_doxygen_update_input_source _paths _out_var)
     set(_inputs "")
     if (_paths)
+        separate_arguments(_paths)
         foreach (_path ${_paths})
             if (NOT IS_ABSOLUTE "${_path}")
                 get_filename_component(_path
                         "${_path}" ABSOLUTE
-                        BASE_DIR "${doxygen.project.dir}")
+                        BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
             endif ()
             list(APPEND _inputs "${_path}")
         endforeach ()
     else ()
-        _doxygen_get("INPUT_TARGET" _target)
-        # message(STATUS "!!! INPUT_TARGET = ${_target}")
-        if (TARGET ${_target})
+        message(STATUS "!!! INPUT_TARGET = ${INPUT_TARGET}")
+        if (TARGET ${INPUT_TARGET})
             get_target_property(_inputs
-                    "${_target}"
+                    "${INPUT_TARGET}"
                     INTERFACE_INCLUDE_DIRECTORIES)
-            # message(STATUS "!!! inputs from ${_input_target}: ${_inputs}")
+            message(STATUS "!!! inputs from ${INPUT_TARGET}: ${_inputs}")
         endif ()
     endif ()
 
@@ -239,12 +293,13 @@ endfunction()
 ##############################################################################
 function(_doxygen_update_example_source _directories _out_var)
     if (_directories)
+        separate_arguments(_directories)
         set(_result "")
         foreach (_dir ${_directories})
             if (NOT IS_ABSOLUTE "${_dir}")
                 get_filename_component(_dir
                         "${_dir}" ABSOLUTE
-                        BASE_DIR ${doxygen.project.dir})
+                        BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
             endif ()
             list(APPEND _result "${_dir}")
         endforeach ()
@@ -314,7 +369,7 @@ endfunction()
 ##############################################################################
 function(_doxygen_set_example_source _out_var)
     _doxygen_find_directory(
-            "${doxygen.project.dir}"
+            "${CMAKE_CURRENT_SOURCE_DIR}"
             "example;examples"
             _example_path
     )
@@ -323,25 +378,24 @@ endfunction()
 
 ##############################################################################
 #.rst:
-# .. cmake:command:: _doxygen_set_target_name
+# .. cmake:command:: _doxygen_update_docs_target
 #
 # .. code-block:: cmake
 #
-#   _doxygen_set_target_name(_out_var)
+#   _doxygen_update_docs_target(_out_var)
 #
-# Sets the ``TARGET_NAME`` parameter when it was not given explicitly:
+# Sets the ``DOCS_TARGET`` parameter when it was not given explicitly:
 #
 # * if ``INPUT_TARGET`` is not empty, sets it to ``${INPUT_TARGET}.doxygen``;
 # * otherwise, sets it to ``${PROJECT_NAME}``
 #
 # Puts the result into ``_out_var``.
 ##############################################################################
-function(_doxygen_set_target_name _out_var)
-    _doxygen_get(INPUT_TARGET _input_target)
-    if (_input_target STREQUAL "")
+function(_doxygen_update_docs_target _target _out_var)
+    if (${_target} STREQUAL ".doxygen")
         set(${_out_var} "${PROJECT_NAME}.doxygen" PARENT_SCOPE)
     else()
-        set(${_out_var} "${_input_target}.doxygen" PARENT_SCOPE)
+        set(${_out_var} ${_target} PARENT_SCOPE)
     endif()
 endfunction()
 
@@ -362,7 +416,7 @@ macro(_doxygen_update_generate_latex _generate_latex _out_var)
         if (NOT DEFINED LATEX_FOUND)
             log_info(doxygen-cmake "LaTex docs requested, importing LATEX...")
             find_package(LATEX QUIET OPTIONAL_COMPONENTS MAKEINDEX PDFLATEX)
-            doxygen_global_set(LATEX_FOUND ${LATEX_FOUND})
+            #doxygen_global_set(LATEX_FOUND ${LATEX_FOUND})
         endif()
         if (NOT LATEX_FOUND)
             log_info(doxygen-cmake "LATEX was not found; skip LaTex generation.")

@@ -1,33 +1,52 @@
-list(APPEND CMAKE_MODULE_PATH "../externals/cmake-utilities/cmake")
-include(../cmake/AddDocs.cmake)
+set(_project_source_dir "${CMAKE_CURRENT_BINARY_DIR}/../..")
+
+include(${_project_source_dir}/cmake/AddDocs.cmake)
+include(${_project_source_dir}/test/cmake/CommonTest.cmake)
 
 function(test_create_targets)
-    _doxygen_set(OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
-    _doxygen_set(GENERATE_HTML ON)
-    _doxygen_set(GENERATE_LATEX ON)
+    set(OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+    set(GENERATE_HTML YES)
+    set(GENERATE_LATEX YES)
     #_JSON_set(doxygen.output-latex.generate-latex true)
-    _doxygen_set(GENERATE_PDF true)
+    set(GENERATE_PDF true)
 
-    #add_custom_target(_test COMMAND "${CMAKE_COMMAND} --version")
-    _doxygen_set(INPUT_TARGET main)
-    _doxygen_set(TARGET_NAME "doxygen_docs")
-    _doxygen_set(PROJECT_FILE cmake/Doxyfile2)
-    configure_file(cmake/Doxyfile2
+    create_mock_target(main EXECUTABLE)
+    set(INPUT_TARGET main)
+    set(DOCS_TARGET "doxygen_docs")
+    set(PROJECT_FILE ${_project_source_dir}/test/cmake/Doxyfile2)
+    configure_file(${_project_source_dir}/test/cmake/Doxyfile2
             ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile2 @ONLY)
-    _doxygen_create_generate_docs_target()
-    _doxygen_create_open_targets()
+    _doxygen_create_generate_docs_target(
+            "${PROJECT_FILE}"
+            "${OUTPUT_DIRECTORY}"
+            ${DOCS_TARGET}
+            ${GENERATE_HTML}
+            ${GENERATE_LATEX}
+            ${GENERATE_PDF})
+    _doxygen_create_open_targets(
+            "${PROJECT_FILE}"
+            "${OUTPUT_DIRECTORY}"
+            ${DOCS_TARGET}
+            ${GENERATE_HTML}
+            ${GENERATE_LATEX}
+            ${GENERATE_PDF})
 
-    if (NOT TARGET doxygen_docs)
-        assert_fail("doxygen target `doxygen_docs` was not created")
+    target_created(doxygen_docs _doxygen_docs)
+    target_created(doxygen_docs.open_html doxygen_docs_open_html)
+    target_created(doxygen_docs doxygen_docs_open_latex)
+    target_created(doxygen_docs doxygen_docs_open_pdf)
+
+    if (NOT _doxygen_docs)
+        assert(false "doxygen target `doxygen_docs` was not created")
     endif()
-    if (NOT TARGET doxygen_docs.open_html)
-        assert_fail("The target `doxygen_docs.open_html` was not created")
+    if (NOT doxygen_docs_open_html)
+        assert(false "The target `doxygen_docs.open_html` was not created")
     endif()
-    if (NOT TARGET doxygen_docs.open_latex)
-        assert_fail("The target `doxygen_docs.open_latex` was not created")
+    if (NOT doxygen_docs_open_latex)
+        assert(false "The target `doxygen_docs.open_latex` was not created")
     endif()
-    if (NOT TARGET doxygen_docs.open_pdf)
-        assert_fail("The target `doxygen_docs.open_pdf` was not created")
+    if (NOT doxygen_docs_open_pdf)
+        assert(false "The target `doxygen_docs.open_pdf` was not created")
     endif()
 endfunction()
 

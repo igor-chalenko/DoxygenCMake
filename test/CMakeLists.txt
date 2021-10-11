@@ -12,32 +12,38 @@ find_package(cmake-utilities REQUIRED)
 add_test(
         NAME global_map_test
         COMMAND ${CMAKE_COMMAND}
-        -DCMAKE_MODULE_PATH=${CMAKE_UTILITIES_CMAKE_MODULE_PATH}
+        -Dcmake-utilities_DIR=${CMAKE_MODULE_PATH}
         -P ${PROJECT_SOURCE_DIR}/cmake/GlobalMapTest.cmake
 )
 
 add_test(
-        NAME parameter_test
+        NAME parse_inputs_test
         COMMAND ${CMAKE_COMMAND}
-        -DCMAKE_MODULE_PATH=${CMAKE_UTILITIES_CMAKE_MODULE_PATH}
-        -P ${PROJECT_SOURCE_DIR}/cmake/ParameterTest.cmake
+        -Dcmake-utilities_DIR=${CMAKE_MODULE_PATH}
+        -P ${PROJECT_SOURCE_DIR}/cmake/ParseInputsTest.cmake
+)
+
+add_test(
+        NAME load_project_test
+        COMMAND ${CMAKE_COMMAND}
+        -DDOXYGEN_OPEN_TARGETS=ON
+        -Dcmake-utilities_DIR=${CMAKE_MODULE_PATH}
+        -DCMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+        -DCMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -P ${PROJECT_SOURCE_DIR}/cmake/LoadProjectTest.cmake
 )
 
 add_test(
         NAME create_targets_test
         COMMAND ${CMAKE_COMMAND}
-        -DCMAKE_MODULE_PATH=${CMAKE_UTILITIES_CMAKE_MODULE_PATH}
+        -Dcmake-utilities_DIR=${CMAKE_MODULE_PATH}
         -P ${PROJECT_SOURCE_DIR}/cmake/CreateTargetsTest.cmake
 )
 
-if (TRUE)
-    message(STATUS "Running tests...")
-    set(DOXYGEN_LOG_LEVEL INFO)
-    #set(doxygen.project.dir "${CMAKE_CURRENT_SOURCE_DIR}")
-    #doxygen_add_docs_new(PROJECT_FILE cmake/Doxyfile INPUT_TARGET main GENERATE_PDF)
-    #include(cmake/GlobalMapTest.cmake)
-    #include(cmake/ParameterTest.cmake)
-    #include(cmake/CreateTargetsTest.cmake)
-    #include(cmake/TestAddDocs.cmake)
-    #include(TestFindAddDocs.cmake)
-endif()
+add_test(
+        NAME add_docs_test
+        COMMAND ${CMAKE_COMMAND}
+        -Dcmake-utilities_DIR=${CMAKE_MODULE_PATH}
+        -DDOXYGEN_OPEN_TARGETS=ON
+        -P ${PROJECT_SOURCE_DIR}/cmake/AddDocsTest.cmake
+)

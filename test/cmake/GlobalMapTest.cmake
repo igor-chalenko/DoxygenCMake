@@ -1,7 +1,5 @@
-include(Testing)
-include(GlobalMap)
-include(DynamicFunctions)
-include(Logging)
+set(_project_source_dir "${CMAKE_CURRENT_BINARY_DIR}/../..")
+include(${_project_source_dir}/cmake/AddDocs.cmake)
 
 function(test_get_set_append)
     doxygen_global_set(property "value")
