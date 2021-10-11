@@ -8,6 +8,9 @@ os:
 branches:
   only:
     - master
+before_install:
+  - apt-get install -y --only-upgrade cmake
+
 script:
   - cmake --version
   - git clone https://github.com/igor-chalenko/cmake-utilities.git
