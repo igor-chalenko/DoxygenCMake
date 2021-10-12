@@ -9,9 +9,7 @@ branches:
   only:
     - master
 before_install:
-  - sudo apt remove --purge --auto-remove cmake
-  - sudo apt remove --purge --auto-remove cmake3
-  - sudo apt remove --purge --auto-remove cmake-data
+  - which cmake
   - sudo snap remove cmake
   - wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
   - sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
