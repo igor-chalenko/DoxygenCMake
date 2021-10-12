@@ -5,5 +5,3 @@ set_and_check(DOXYGEN_CMAKE_MODULE_DIR "${doxygen_dir}")
 list(APPEND DOXYGEN_CMAKE_MODULE_PATH "${DOXYGEN_CMAKE_MODULE_DIR}")
 list(APPEND CMAKE_MODULE_PATH "${DOXYGEN_CMAKE_MODULE_PATH}")
 include(${DOXYGEN_CMAKE_MODULE_DIR}/FindDoxygenCMake.cmake)
-
-message(STATUS "Found DoxygenCMake")
