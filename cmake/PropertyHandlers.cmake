@@ -337,9 +337,16 @@ function(_doxygen_update_input_source _paths _out_var)
     else ()
         message(STATUS "!!! INPUT_TARGET = ${INPUT_TARGET}")
         if (TARGET ${INPUT_TARGET})
-            get_target_property(_inputs
-                    "${INPUT_TARGET}"
-                    INTERFACE_INCLUDE_DIRECTORIES)
+            _doxygen_get_target_property(_type ${INPUT_TARGET} TYPE)
+            if (_type STREQUAL "INTERFACE_LIBRARY")
+                _doxygen_get_target_property(_inputs
+                        "${INPUT_TARGET}"
+                        INTERFACE_INCLUDE_DIRECTORIES)
+            else()
+                _doxygen_get_target_property(_inputs
+                        "${INPUT_TARGET}"
+                        INCLUDE_DIRECTORIES)
+            endif()
             message(STATUS "!!! inputs from ${INPUT_TARGET}: ${_inputs}")
         endif ()
     endif ()
