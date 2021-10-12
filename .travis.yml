@@ -19,7 +19,8 @@ script:
   - cd cmake-utilities
   - mkdir build && cd build
   - /usr/bin/cmake ..
-  - make test install
+  - make test
+  - sudo make install
   - cd ..
   - mkdir build && cd build
   - /usr/bin/cmake ..
