@@ -9,6 +9,7 @@ branches:
   only:
     - master
 before_install:
+  - sudo apt remove -y cmake
   - sudo snap install cmake --classic
 
 script:
