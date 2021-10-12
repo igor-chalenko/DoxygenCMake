@@ -9,20 +9,18 @@ branches:
   only:
     - master
 before_install:
-  - which cmake
-  - sudo snap remove cmake
   - wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
   - sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
   - sudo apt update
   - sudo apt install cmake
 script:
-  - cmake --version
+  - /usr/bin/cmake --version
   - git clone https://github.com/igor-chalenko/cmake-utilities.git
   - cd cmake-utilities
   - mkdir build && cd build
-  - cmake ..
+  - /usr/bin/cmake ..
   - make test install
   - cd ..
   - mkdir build && cd build
-  - cmake ..
+  - /usr/bin/cmake ..
   - make test
