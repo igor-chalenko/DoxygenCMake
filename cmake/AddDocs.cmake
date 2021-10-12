@@ -260,14 +260,16 @@ function(doxygen_add_doc_targets)
     # save processed project file
     _doxygen_save_project("${_output_project_file_name}" ${_properties})
 
+    _doxygen_collect_dependencies(_dependencies)
+    log_debug(doxygen-cmake "Collected dependencies: ${_dependencies}")
+
     _doxygen_create_generate_docs_target(
             "${PROJECT_FILE}"
             "${OUTPUT_DIRECTORY}"
             "${DOCS_TARGET}"
             ${GENERATE_HTML}
             ${GENERATE_LATEX}
-            ${GENERATE_PDF})
-    message(STATUS "!!! DOXYGEN_OPEN_TARGETS=${DOXYGEN_OPEN_TARGETS}")
+            ${GENERATE_PDF} ${_dependencies})
     if (DOXYGEN_OPEN_TARGETS)
         _doxygen_create_open_targets(
                 "${PROJECT_FILE}"

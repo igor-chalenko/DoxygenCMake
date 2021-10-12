@@ -81,6 +81,16 @@ macro(_doxygen_update_properties _properties)
             SETTER "set_makeindex_cmd_name" OVERWRITE)
     _doxygen_property(_specials LATEX_CMD_NAME
             SETTER "set_latex_cmd_name" OVERWRITE)
+    _doxygen_property(_specials LAYOUT_FILE
+            UPDATER "update_layout_file")
+    _doxygen_property(_specials HTML_HEADER
+            UPDATER "update_html_header")
+    _doxygen_property(_specials HTML_FOOTER
+            UPDATER "update_html_footer")
+    _doxygen_property(_specials HTML_EXTRA_STYLESHEET
+            UPDATER "update_html_extra_stylesheet")
+    _doxygen_property(_specials HTML_EXTRA_FILES
+            UPDATER "update_html_extra_files")
 
     _doxygen_property(_specials PROJECT_BRIEF DEFAULT "${PROJECT_DESCRIPTION}" OVERWRITE)
     _doxygen_property(_specials PROJECT_NAME DEFAULT "${PROJECT_NAME}" OVERWRITE)
@@ -97,10 +107,9 @@ macro(_doxygen_update_properties _properties)
     _doxygen_property(_specials EXAMPLE_RECURSIVE DEFAULT YES OVERWRITE)
 
     foreach(_property ${${_properties}})
-        if (_property IN_LIST _specials)
-            _doxygen_parse_input(${_property} STRING ${doxygen.${_property}} PROJECT_VALUE "${${_property}}" ${ARGN})
+        if ("${${_property}}" STREQUAL "")
+            _doxygen_parse_input(${_property} STRING ${doxygen.${_property}} ${ARGN})
         else()
-            log_debug(_doxygen_update_properties "updating regular property ${_property}...")
             _doxygen_parse_input(${_property} STRING ${doxygen.${_property}} PROJECT_VALUE "${${_property}}" ${ARGN})
         endif()
     endforeach()
@@ -163,7 +172,7 @@ function(_doxygen_parse_input _property _type)
             set(_value "${IN_${_property}}")
         endif()
     endif()
-    list(APPEND _report "${_property} becomes ${_value}")
+    list(APPEND _report "${_property} becomes `${_value}`")
     foreach (_line IN LISTS _report)
         log_debug(_doxygen_parse_input "${_line}")
     endforeach()
