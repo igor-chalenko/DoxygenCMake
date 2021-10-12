@@ -21,7 +21,7 @@ script:
   - /usr/bin/cmake ..
   - make test
   - sudo make install
-  - cd ..
+  - cd ../..
   - mkdir build && cd build
   - /usr/bin/cmake ..
   - make test
