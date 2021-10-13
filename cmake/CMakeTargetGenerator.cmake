@@ -77,12 +77,13 @@ function(_doxygen_create_generate_docs_target _project_file _output_directory _d
     # collect outputs for the `OUTPUTS` parameter
     _doxygen_list_outputs("${_output_directory}" _files FILES)
 
+    log_debug(doxygen-cmake "DEPENDS: ${_project_file} ${_inputs} ${ARGN}")
     set(__stamp_file "${CMAKE_CURRENT_BINARY_DIR}/${_docs_target}.stamp")
 
     _doxygen_add_custom_command(OUTPUT ${__stamp_file}
             COMMAND ${CMAKE_COMMAND} -E remove_directory "${_output_dir}"
             MAIN_DEPENDENCY "${_updated_project_file}"
-            DEPENDS "${_project_file}" "${_inputs}"
+            DEPENDS "${_project_file}" "${_inputs}" "${ARGN}"
             COMMAND Doxygen::doxygen "${_updated_project_file}"
             COMMAND ${CMAKE_COMMAND} -E touch ${__stamp_file}
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -352,7 +353,9 @@ endmacro()
 ##############################################################################
 function(_doxygen_list_inputs _out_var)
     set(_all_inputs "")
-    if ({INPUT)
+    message(STATUS "!!! INPUT = ${INPUT}")
+    message(STATUS "!!! INPUT_TARGET = ${INPUT_TARGET}")
+    if (INPUT)
         foreach (_dir ${_inputs})
             if (IS_DIRECTORY ${_dir})
                 file(GLOB_RECURSE _inputs ${_dir}/*)
@@ -392,4 +395,36 @@ for `doxygen_add_docs`:
 
     log_debug(_doxygen_list_inputs "_all_inputs: ${_all_inputs}")
     set(${_out_var} "${_all_inputs}" PARENT_SCOPE)
+endfunction()
+
+function(_doxygen_collect_dependencies _out_var)
+    unset(_result)
+    if(LAYOUT_FILE)
+        log_debug(doxygen-cmake "LAYOUT_FILE ${LAYOUT_FILE} was supplied")
+        list(APPEND _result "${LAYOUT_FILE}")
+    endif()
+    if(HTML_EXTRA_STYLESHEET)
+        log_debug(doxygen-cmake "HTML_EXTRA_STYLESHEET ${HTML_EXTRA_STYLESHEET} was supplied")
+        list(APPEND _result "${HTML_EXTRA_STYLESHEET}")
+    endif()
+    if(HTML_FOOTER)
+        log_debug(doxygen-cmake "HTML_FOOTER ${HTML_FOOTER} was supplied")
+        list(APPEND _result "${HTML_FOOTER}")
+    endif()
+    if (HTML_HEADER)
+        log_debug(doxygen-cmake "HTML_HEADER ${HTML_HEADER} was supplied")
+        list(APPEND _result "${HTML_HEADER}")
+    endif()
+    if (HTML_EXTRA_FILES)
+        log_debug(doxygen-cmake "HTML_EXTRA_FILES ${HTML_EXTRA_FILES} was supplied")
+        separate_arguments(HTML_EXTRA_FILES)
+        foreach(_file ${HTML_EXTRA_FILES})
+            if (NOT IS_ABSOLUTE "${_file}")
+                list(APPEND _result "${CMAKE_CURRENT_SOURCE_DIR}/${_file}")
+            else()
+                list(APPEND _result "${_file}")
+            endif()
+        endforeach()
+    endif()
+    set(${_out_var} ${_result} PARENT_SCOPE)
 endfunction()
