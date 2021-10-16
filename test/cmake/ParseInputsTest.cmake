@@ -1,5 +1,5 @@
 set(_project_source_dir "${CMAKE_CURRENT_BINARY_DIR}/../..")
-include(${_project_source_dir}/cmake/AddDocs.cmake)
+include(${_project_source_dir}/cmake/add-docs.cmake)
 
 #log_level(doxygen-cmake DEBUG)
 # there's no project name in the script mode

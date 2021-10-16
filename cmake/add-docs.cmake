@@ -15,9 +15,9 @@ find_package(cmake-utilities REQUIRED)
 parameter_to_function_prefix(doxygen global_get global_set
         global_unset global_append global_clear global_index)
 
-include(${_doxygen_dir}/NewProjectFunctions.cmake)
-include(${_doxygen_dir}/CMakeTargetGenerator.cmake)
-include(${_doxygen_dir}/PropertyHandlers.cmake)
+include(${_doxygen_dir}/project-functions.cmake)
+include(${_doxygen_dir}/cmake-target-generators.cmake)
+include(${_doxygen_dir}/property-handlers.cmake)
 
 ##############################################################################
 #.rst:
@@ -242,7 +242,7 @@ include(${_doxygen_dir}/PropertyHandlers.cmake)
 #
 # .. _json-cmake: https://github.com/sbellus/json-cmake
 ##############################################################################
-function(doxygen_add_doc_targets)
+function(add_doxygen_targets)
     # parse input arguments
     _doxygen_parse_inputs(${ARGN})
 

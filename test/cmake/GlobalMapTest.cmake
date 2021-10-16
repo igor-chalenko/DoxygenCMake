@@ -1,5 +1,5 @@
 set(_project_source_dir "${CMAKE_CURRENT_BINARY_DIR}/../..")
-include(${_project_source_dir}/cmake/AddDocs.cmake)
+include(${_project_source_dir}/cmake/add-docs.cmake)
 
 function(test_get_set_append)
     doxygen_global_set(property "value")

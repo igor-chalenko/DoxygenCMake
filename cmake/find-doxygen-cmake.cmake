@@ -17,7 +17,7 @@ if (TARGET Doxygen::doxygen)
     # "New" IN_LIST syntax
     cmake_policy(SET CMP0057 NEW)
 
-    include(${_current_dir}/AddDocs.cmake)
+    include(${_current_dir}/add-docs.cmake)
 else()
     message(STATUS "Doxygen is not installed, DoxygenCMake is disabled.")
 endif()

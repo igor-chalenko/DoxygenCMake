@@ -1,7 +1,7 @@
 project(doxygen-cmake-test VERSION 0.1)
 
 set(_doxygen_dir ${PROJECT_SOURCE_DIR}/../cmake)
-#include(../cmake/AddDocs.cmake)
+#include(../cmake/add-docs.cmake)
 
 add_executable(main src/main.cc)
 set_target_properties(main PROPERTIES EXCLUDE_FROM_ALL 1)
