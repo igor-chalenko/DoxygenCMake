@@ -8,7 +8,7 @@ if (TARGET Doxygen::doxygen)
     set_property(GLOBAL PROPERTY _current_dir "${_current_dir}")
 
     find_package_handle_standard_args(
-            DoxygenCMake
+            doxygen-cmake
             REQUIRED_VARS DOXYGEN_EXECUTABLE
             VERSION_VAR DOXYGEN_VERSION
             HANDLE_COMPONENTS
@@ -17,7 +17,7 @@ if (TARGET Doxygen::doxygen)
     # "New" IN_LIST syntax
     cmake_policy(SET CMP0057 NEW)
 
-    include(${_doxygen_dir}/AddDocs.cmake)
+    include(${_current_dir}/AddDocs.cmake)
 else()
     message(STATUS "Doxygen is not installed, DoxygenCMake is disabled.")
 endif()

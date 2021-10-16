@@ -80,13 +80,13 @@ function(_doxygen_create_generate_docs_target _project_file _output_directory _d
     log_debug(doxygen-cmake "DEPENDS: ${_project_file} ${_inputs} ${ARGN}")
     set(__stamp_file "${CMAKE_CURRENT_BINARY_DIR}/${_docs_target}.stamp")
 
-    _doxygen_add_custom_command(OUTPUT ${__stamp_file}
-            COMMAND ${CMAKE_COMMAND} -E remove_directory "${_output_dir}"
+    _doxygen_add_custom_command(OUTPUT "${__stamp_file}"
+            COMMAND ${CMAKE_COMMAND} -E remove_directory "${_output_directory}"
             MAIN_DEPENDENCY "${_updated_project_file}"
             DEPENDS "${_project_file}" "${_inputs}" "${ARGN}"
             COMMAND Doxygen::doxygen "${_updated_project_file}"
-            COMMAND ${CMAKE_COMMAND} -E touch ${__stamp_file}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMAND ${CMAKE_COMMAND} -E touch "${__stamp_file}"
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
             COMMENT "Generating documentation using ${_updated_project_file} ..."
             BYPRODUCTS "${_files}"
             VERBATIM)
@@ -96,6 +96,11 @@ function(_doxygen_create_generate_docs_target _project_file _output_directory _d
             DEPENDS ${__stamp_file}
             SOURCES ${_inputs}
             )
+
+    if (_generate_pdf)
+        _doxygen_add_pdf_commands("${_output_directory}" "${_docs_target}")
+    endif()
+
     unset(__stamp_file)
 
 endfunction()
@@ -115,13 +120,20 @@ endfunction()
 #
 # * ``_target_name`` the name of the target to add commands to
 ##############################################################################
-function(_doxygen_add_pdf_commands _target_name)
-    _doxygen_get(GENERATE_PDF _pdf)
-    _doxygen_get(OUTPUT_DIRECTORY _output_dir)
-
-    if (_pdf)
-        file(MAKE_DIRECTORY ${_output_dir}/pdf)
-        add_custom_command(TARGET
+function(_doxygen_add_pdf_commands _output_dir _target_name)
+    file(MAKE_DIRECTORY ${_output_dir}/pdf)
+    if (WIN32)
+        _doxygen_add_custom_command(TARGET
+                ${_target_name}
+                POST_BUILD
+                COMMAND
+                make.bat
+                WORKING_DIRECTORY
+                "${_output_dir}/latex"
+                COMMENT "Generating PDF..."
+                VERBATIM)
+    else()
+        _doxygen_add_custom_command(TARGET
                 ${_target_name}
                 POST_BUILD
                 COMMAND
@@ -130,14 +142,14 @@ function(_doxygen_add_pdf_commands _target_name)
                 "${_output_dir}/latex"
                 COMMENT "Generating PDF..."
                 VERBATIM)
-        add_custom_command(TARGET ${_target_name} POST_BUILD
-                COMMENT "Copying refman.pdf to its own directory..."
-                COMMAND ${CMAKE_COMMAND} -E copy
-                "${_output_dir}/latex/refman.pdf"
-                "${_output_dir}/pdf/refman.pdf")
-        add_custom_command(TARGET ${_target_name} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E rm "${_output_dir}/latex/refman.pdf")
-    endif ()
+    endif()
+    _doxygen_add_custom_command(TARGET ${_target_name} POST_BUILD
+            COMMENT "Copying refman.pdf to its own directory..."
+            COMMAND ${CMAKE_COMMAND} -E copy
+            "${_output_dir}/latex/refman.pdf"
+            "${_output_dir}/pdf/refman.pdf")
+    _doxygen_add_custom_command(TARGET ${_target_name} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E rm "${_output_dir}/latex/refman.pdf")
 endfunction()
 
 ##############################################################################
@@ -318,9 +330,10 @@ macro(_doxygen_set_target_properties _target)
     set_target_properties(${_target} ${ARGN})
 endmacro()
 
-macro(_doxygen_get_target_property _out_var _target _property)
-    get_target_property(_out_var ${_target} ${_property})
-endmacro()
+function(_doxygen_get_target_property _out_var _target _property)
+    get_target_property(_type ${_target} ${_property})
+    set(${_out_var} ${_type} PARENT_SCOPE)
+endfunction()
 
 macro(_doxygen_add_custom_command)
     add_custom_command(${ARGN})
@@ -353,12 +366,10 @@ endmacro()
 ##############################################################################
 function(_doxygen_list_inputs _out_var)
     set(_all_inputs "")
-    message(STATUS "!!! INPUT = ${INPUT}")
-    message(STATUS "!!! INPUT_TARGET = ${INPUT_TARGET}")
     if (INPUT)
-        foreach (_dir ${_inputs})
-            if (IS_DIRECTORY ${_dir})
-                file(GLOB_RECURSE _inputs ${_dir}/*)
+        foreach (_dir ${INPUT})
+            if (IS_DIRECTORY "${_dir}")
+                file(GLOB_RECURSE _inputs "${_dir}/*")
                 list(APPEND _all_inputs "${_inputs}")
                 log_debug(_doxygen_list_inputs "1. appending inputs ${_inputs}")
             else ()
@@ -368,13 +379,14 @@ function(_doxygen_list_inputs _out_var)
         endforeach ()
     elseif (INPUT_TARGET)
         _doxygen_get_target_property(_type ${INPUT_TARGET} TYPE)
+        _log_debug(_doxygen_list_inputs "${INPUT_TARGET} - type is ${_type}")
         if (_type STREQUAL INTERFACE_LIBRARY)
             message(STATUS "searching includes for interface library ${INPUT_TARGET}...")
             _doxygen_get_target_property(_include_directories
                     ${INPUT_TARGET}
                     INTERFACE_INCLUDE_DIRECTORIES)
         else()
-            message(STATUS "searching includes for ${_input_target}...")
+            message(STATUS "searching includes for ${INPUT_TARGET}...")
             _doxygen_get_target_property(_include_directories
                     ${INPUT_TARGET}
                     INCLUDE_DIRECTORIES)

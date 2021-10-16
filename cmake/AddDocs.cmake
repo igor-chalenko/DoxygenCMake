@@ -257,9 +257,6 @@ function(doxygen_add_doc_targets)
             ${PROJECT_FILE}
             _output_project_file_name)
 
-    # save processed project file
-    _doxygen_save_project("${_output_project_file_name}" ${_properties})
-
     _doxygen_collect_dependencies(_dependencies)
     log_debug(doxygen-cmake "Collected dependencies: ${_dependencies}")
 
@@ -284,6 +281,9 @@ function(doxygen_add_doc_targets)
         # install generated files
         _doxygen_create_install_targets()
     endif ()
+
+    # save processed project file
+    _doxygen_save_project("${_output_project_file_name}" ${_properties})
 endfunction()
 
 ##############################################################################

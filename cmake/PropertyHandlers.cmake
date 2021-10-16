@@ -53,7 +53,7 @@ function(_doxygen_find_directory _base_dir _names _out_var)
             set(_search_path ${_base_dir}/${_name})
         endif()
         if (IS_DIRECTORY "${_search_path}")
-            _doxygen_log(DEBUG "Found directory ${_search_path}")
+            log_debug(doxygen-cmake "Found directory ${_search_path}")
             list(APPEND _result ${_search_path})
         endif ()
     endforeach ()
@@ -105,21 +105,22 @@ endfunction()
 # ``PDFLATEX_COMPILER``, previously configured by ``find_package(LATEX)``.
 # Puts the result into ``_out_var``.
 ##############################################################################
-function(_doxygen_set_latex_cmd_name _out_var)
+function(_doxygen_update_latex_cmd_name _latex_cmd_name _out_var)
+    find_package(LATEX QUIET OPTIONAL_COMPONENTS MAKEINDEX PDFLATEX)
     if (NOT "${PDFLATEX_COMPILER}" STREQUAL PDFLATEX_COMPILER-NOTFOUND)
         set(${_out_var} "${PDFLATEX_COMPILER}" PARENT_SCOPE)
     else ()
         if (LATEX_FOUND)
             set(${_out_var} "${LATEX_COMPILER}" PARENT_SCOPE)
         else ()
-            set(${_out_var} "" PARENT_SCOPE)
+            set(${_out_var} "${_latex_cmd_name}" PARENT_SCOPE)
         endif ()
     endif ()
 endfunction()
 
 ##############################################################################
 #.rst:
-# .. cmake:command:: _doxygen_set_makeindex_cmd_name
+# .. cmake:command:: _doxygen_update_makeindex_cmd_name
 #
 # ..  code-block:: cmake
 #
@@ -129,11 +130,11 @@ endfunction()
 # `MAKEINDEX_COMPILER` set by `find_package(LATEX)`. Puts the result into
 # ``_out_var``.
 ##############################################################################
-function(_doxygen_set_makeindex_cmd_name _out_var)
+function(_doxygen_update_makeindex_cmd_name _cmd_name _out_var)
     if (NOT "${MAKEINDEX_COMPILER}" STREQUAL "MAKEINDEX_COMPILER-NOTFOUND")
         set(${_out_var} "${MAKEINDEX_COMPILER}" PARENT_SCOPE)
     else()
-        set(${_out_var} "" PARENT_SCOPE)
+        set(${_out_var} "${_cmd_name}" PARENT_SCOPE)
     endif ()
 endfunction()
 
@@ -335,7 +336,6 @@ function(_doxygen_update_input_source _paths _out_var)
             list(APPEND _inputs "${_path}")
         endforeach ()
     else ()
-        message(STATUS "!!! INPUT_TARGET = ${INPUT_TARGET}")
         if (TARGET ${INPUT_TARGET})
             _doxygen_get_target_property(_type ${INPUT_TARGET} TYPE)
             if (_type STREQUAL "INTERFACE_LIBRARY")
@@ -347,7 +347,6 @@ function(_doxygen_update_input_source _paths _out_var)
                         "${INPUT_TARGET}"
                         INCLUDE_DIRECTORIES)
             endif()
-            message(STATUS "!!! inputs from ${INPUT_TARGET}: ${_inputs}")
         endif ()
     endif ()
 
