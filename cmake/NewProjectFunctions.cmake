@@ -89,9 +89,9 @@ macro(_doxygen_update_properties _properties)
     _doxygen_property(_specials WARN_FORMAT
             SETTER "set_warn_format" OVERWRITE)
     _doxygen_property(_specials MAKEINDEX_CMD_NAME
-            SETTER "set_makeindex_cmd_name" OVERWRITE)
+            UPDATER "update_makeindex_cmd_name") # OVERWRITE)
     _doxygen_property(_specials LATEX_CMD_NAME
-            SETTER "set_latex_cmd_name" OVERWRITE)
+            UPDATER "update_latex_cmd_name")# OVERWRITE)
     _doxygen_property(_specials LAYOUT_FILE
             UPDATER "update_layout_file")
     _doxygen_property(_specials HTML_HEADER

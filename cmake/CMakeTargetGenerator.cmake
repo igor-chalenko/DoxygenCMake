@@ -122,15 +122,27 @@ endfunction()
 ##############################################################################
 function(_doxygen_add_pdf_commands _output_dir _target_name)
     file(MAKE_DIRECTORY ${_output_dir}/pdf)
-    _doxygen_add_custom_command(TARGET
-            ${_target_name}
-            POST_BUILD
-            COMMAND
-            ${CMAKE_MAKE_PROGRAM} #> ${_output_directory}/latex.log 2>&1
-            WORKING_DIRECTORY
-            "${_output_dir}/latex"
-            COMMENT "Generating PDF..."
-            VERBATIM)
+    if (WIN32)
+        _doxygen_add_custom_command(TARGET
+                ${_target_name}
+                POST_BUILD
+                COMMAND
+                make.bat
+                WORKING_DIRECTORY
+                "${_output_dir}/latex"
+                COMMENT "Generating PDF..."
+                VERBATIM)
+    else()
+        _doxygen_add_custom_command(TARGET
+                ${_target_name}
+                POST_BUILD
+                COMMAND
+                ${CMAKE_MAKE_PROGRAM} #> ${_output_directory}/latex.log 2>&1
+                WORKING_DIRECTORY
+                "${_output_dir}/latex"
+                COMMENT "Generating PDF..."
+                VERBATIM)
+    endif()
     _doxygen_add_custom_command(TARGET ${_target_name} POST_BUILD
             COMMENT "Copying refman.pdf to its own directory..."
             COMMAND ${CMAKE_COMMAND} -E copy
