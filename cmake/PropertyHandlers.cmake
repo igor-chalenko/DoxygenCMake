@@ -106,6 +106,7 @@ endfunction()
 # Puts the result into ``_out_var``.
 ##############################################################################
 function(_doxygen_set_latex_cmd_name _out_var)
+    find_package(LATEX QUIET OPTIONAL_COMPONENTS MAKEINDEX PDFLATEX)
     if (NOT "${PDFLATEX_COMPILER}" STREQUAL PDFLATEX_COMPILER-NOTFOUND)
         set(${_out_var} "${PDFLATEX_COMPILER}" PARENT_SCOPE)
     else ()

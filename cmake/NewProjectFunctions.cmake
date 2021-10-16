@@ -30,6 +30,17 @@ function(_doxygen_save_project _project_file_name)
     unset(_contents)
     foreach(_key IN LISTS ARGN)
         string(APPEND _contents "${_key} = @${_key}@\n")
+
+        set(_value "${${_key}}")
+        string(SUBSTRING "${_value}" 0 1 _first_char)
+        string(FIND "${_value}" " " _ind)
+        string(FIND "${_value}" "\n" _multiline)
+
+        if (_ind GREATER -1 AND NOT _first_char STREQUAL "\"" AND _multiline EQUAL -1)
+            set(${_key} "\"${_value}\"")
+            set(${_key} "\"${_value}\"" PARENT_SCOPE)
+        endif()
+        #message(STATUS "!!! _value=${_value}, _len = ${_len}")
     endforeach()
 
     log_info(doxygen "Saving project file ${_project_file_name}.in ...")

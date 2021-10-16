@@ -80,13 +80,13 @@ function(_doxygen_create_generate_docs_target _project_file _output_directory _d
     log_debug(doxygen-cmake "DEPENDS: ${_project_file} ${_inputs} ${ARGN}")
     set(__stamp_file "${CMAKE_CURRENT_BINARY_DIR}/${_docs_target}.stamp")
 
-    _doxygen_add_custom_command(OUTPUT ${__stamp_file}
-            COMMAND ${CMAKE_COMMAND} -E remove_directory "${_output_dir}"
+    _doxygen_add_custom_command(OUTPUT "${__stamp_file}"
+            COMMAND ${CMAKE_COMMAND} -E remove_directory "${_output_directory}"
             MAIN_DEPENDENCY "${_updated_project_file}"
             DEPENDS "${_project_file}" "${_inputs}" "${ARGN}"
             COMMAND Doxygen::doxygen "${_updated_project_file}"
-            COMMAND ${CMAKE_COMMAND} -E touch ${__stamp_file}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMAND ${CMAKE_COMMAND} -E touch "${__stamp_file}"
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
             COMMENT "Generating documentation using ${_updated_project_file} ..."
             BYPRODUCTS "${_files}"
             VERBATIM)
@@ -96,6 +96,11 @@ function(_doxygen_create_generate_docs_target _project_file _output_directory _d
             DEPENDS ${__stamp_file}
             SOURCES ${_inputs}
             )
+
+    if (_generate_pdf)
+        _doxygen_add_pdf_commands("${_output_directory}" "${_docs_target}")
+    endif()
+
     unset(__stamp_file)
 
 endfunction()
@@ -115,29 +120,24 @@ endfunction()
 #
 # * ``_target_name`` the name of the target to add commands to
 ##############################################################################
-function(_doxygen_add_pdf_commands _target_name)
-    _doxygen_get(GENERATE_PDF _pdf)
-    _doxygen_get(OUTPUT_DIRECTORY _output_dir)
-
-    if (_pdf)
-        file(MAKE_DIRECTORY ${_output_dir}/pdf)
-        add_custom_command(TARGET
-                ${_target_name}
-                POST_BUILD
-                COMMAND
-                ${CMAKE_MAKE_PROGRAM} #> ${_output_directory}/latex.log 2>&1
-                WORKING_DIRECTORY
-                "${_output_dir}/latex"
-                COMMENT "Generating PDF..."
-                VERBATIM)
-        add_custom_command(TARGET ${_target_name} POST_BUILD
-                COMMENT "Copying refman.pdf to its own directory..."
-                COMMAND ${CMAKE_COMMAND} -E copy
-                "${_output_dir}/latex/refman.pdf"
-                "${_output_dir}/pdf/refman.pdf")
-        add_custom_command(TARGET ${_target_name} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E rm "${_output_dir}/latex/refman.pdf")
-    endif ()
+function(_doxygen_add_pdf_commands _output_dir _target_name)
+    file(MAKE_DIRECTORY ${_output_dir}/pdf)
+    _doxygen_add_custom_command(TARGET
+            ${_target_name}
+            POST_BUILD
+            COMMAND
+            ${CMAKE_MAKE_PROGRAM} #> ${_output_directory}/latex.log 2>&1
+            WORKING_DIRECTORY
+            "${_output_dir}/latex"
+            COMMENT "Generating PDF..."
+            VERBATIM)
+    _doxygen_add_custom_command(TARGET ${_target_name} POST_BUILD
+            COMMENT "Copying refman.pdf to its own directory..."
+            COMMAND ${CMAKE_COMMAND} -E copy
+            "${_output_dir}/latex/refman.pdf"
+            "${_output_dir}/pdf/refman.pdf")
+    _doxygen_add_custom_command(TARGET ${_target_name} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E rm "${_output_dir}/latex/refman.pdf")
 endfunction()
 
 ##############################################################################
