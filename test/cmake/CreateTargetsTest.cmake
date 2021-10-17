@@ -20,8 +20,6 @@ function(test_create_targets)
             "${PROJECT_FILE}"
             "${OUTPUT_DIRECTORY}"
             ${DOCS_TARGET}
-            ${GENERATE_HTML}
-            ${GENERATE_LATEX}
             ${GENERATE_PDF})
     _doxygen_create_open_targets(
             "${PROJECT_FILE}"

@@ -4,7 +4,7 @@ include(${_project_source_dir}/cmake/add-docs.cmake)
 include(${_project_source_dir}/test/cmake/CommonTest.cmake)
 
 function(add_docs_test)
-    log_level(doxygen-cmake DEBUG)
+    log_level(doxygen-cmake-report DEBUG)
     create_mock_target(main EXECUTABLE)
     # it's not set in the script mode
     set(PROJECT_NAME main)
@@ -17,7 +17,6 @@ function(add_docs_test)
 endfunction()
 
 function(override_parameters_test)
-    log_level(doxygen-cmake DEBUG)
     create_mock_target(main EXECUTABLE)
     set(PROJECT_NAME main)
     add_doxygen_targets(
@@ -30,5 +29,6 @@ function(override_parameters_test)
     assert_same(${WARN_AS_ERROR} YES)
 endfunction()
 
+set(CMAKE_CURRENT_SOURCE_DIR "${SOURCE_ROOT_DIR}")
 add_docs_test()
 override_parameters_test()

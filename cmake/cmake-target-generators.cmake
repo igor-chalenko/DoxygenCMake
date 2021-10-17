@@ -69,7 +69,7 @@ cmake_policy(SET CMP0011 NEW)
 ##############################################################################
 
 
-function(_doxygen_create_generate_docs_target _project_file _output_directory _docs_target _generate_html _generate_latex _generate_pdf)
+function(_doxygen_create_generate_docs_target _project_file _output_directory _docs_target _generate_pdf)
     _doxygen_output_project_file_name(${_project_file} _updated_project_file)
     # collect inputs for `DEPENDS` parameter
     _doxygen_list_inputs(_inputs)
@@ -77,13 +77,23 @@ function(_doxygen_create_generate_docs_target _project_file _output_directory _d
     # collect outputs for the `OUTPUTS` parameter
     _doxygen_list_outputs("${_output_directory}" _files FILES)
 
-    log_debug(doxygen-cmake "DEPENDS: ${_project_file} ${_inputs} ${ARGN}")
     set(__stamp_file "${CMAKE_CURRENT_BINARY_DIR}/${_docs_target}.stamp")
 
+    set(_extra_dependencies
+            "Doxygen will run every time some of the following files are modified (relative to ${CMAKE_CURRENT_SOURCE_DIR}):")
+    _doxygen_log_path("${_project_file}" _extra_dependencies)
+    foreach(_input IN LISTS _inputs)
+        _doxygen_log_path("${_input}" _extra_dependencies)
+    endforeach()
+    foreach(_input ${ARGN})
+        _doxygen_log_path("${_input}" _extra_dependencies)
+    endforeach()
+    log_debug(doxygen ${_extra_dependencies})
     _doxygen_add_custom_command(OUTPUT "${__stamp_file}"
-            COMMAND ${CMAKE_COMMAND} -E remove_directory "${_output_directory}"
-            MAIN_DEPENDENCY "${_updated_project_file}"
-            DEPENDS "${_project_file}" "${_inputs}" "${ARGN}"
+            COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_CURRENT_BINARY_DIR}" --config "$ENV{CMAKE_CONFIG_TYPE}"
+            COMMAND "${CMAKE_COMMAND}" -E remove_directory "${_output_directory}"
+            MAIN_DEPENDENCY "${_project_file}"
+            DEPENDS "${_inputs}" "${ARGN}"
             COMMAND Doxygen::doxygen "${_updated_project_file}"
             COMMAND ${CMAKE_COMMAND} -E touch "${__stamp_file}"
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
@@ -91,7 +101,6 @@ function(_doxygen_create_generate_docs_target _project_file _output_directory _d
             BYPRODUCTS "${_files}"
             VERBATIM)
 
-    log_info(_doxygen_add_custom_target: "adding the target ${_docs_target}")
     _doxygen_add_custom_target(${_docs_target}
             DEPENDS ${__stamp_file}
             SOURCES ${_inputs}
@@ -104,6 +113,15 @@ function(_doxygen_create_generate_docs_target _project_file _output_directory _d
     unset(__stamp_file)
 
 endfunction()
+
+macro(_doxygen_log_path _path _out_var)
+    if(IS_ABSOLUTE "${_path}")
+        file(RELATIVE_PATH _result  "${CMAKE_CURRENT_SOURCE_DIR}" "${_path}")
+        string(APPEND ${_out_var} " `${_result}`")
+    else()
+        string(APPEND ${_out_var} " `${_path}`")
+    endif()
+endmacro()
 
 ##############################################################################
 #.rst:
@@ -179,21 +197,21 @@ function(_doxygen_create_open_targets _project_file _output_directory _docs_targ
 
     if (DOXYGEN_LAUNCHER_COMMAND)
         if (_generate_html STREQUAL "YES" AND NOT TARGET ${_docs_target}.open_html)
-            log_info(doxygen-cmake "Create the target `${_docs_target}` to open the generated HTML files")
+            log_info(doxygen "Create the target `${_docs_target}.open_html` to open the generated HTML files")
             _doxygen_create_open_target(
                     ${_docs_target}.open_html
                     ${_docs_target}
                     "${_output_directory}/html/index.html")
         endif ()
         if (_generate_latex STREQUAL "YES" OR _generate_pdf AND NOT TARGET ${_docs_target}.open_latex)
-            log_info(doxygen-cmake "Create a target to open the generated LaTex files")
+            log_info(doxygen "Create the target `${_docs_target}.open_latex` to open the generated LaTex files")
             _doxygen_create_open_target(
                     ${_docs_target}.open_latex
                     ${_docs_target}
                     "${_output_directory}/latex/refman.tex")
         endif ()
         if (_generate_pdf AND NOT TARGET ${_docs_target}.open_pdf)
-            log_info(doxygen-cmake "Create a target to open the generated PDF file")
+            log_info(doxygen "Create the target `${_docs_target}.open_pdf` to open the generated PDF file")
             _doxygen_create_open_target(
                     ${_docs_target}.open_pdf
                     ${_docs_target}
@@ -222,7 +240,6 @@ endfunction()
 # * ``_file`` a file to open, such as `index.html`
 ##############################################################################
 function(_doxygen_create_open_target _target_name _parent_target_name _file)
-    log_info(doxygen "Adding launch target ${_target_name} for ${_file}...")
     _doxygen_add_custom_target(${_target_name}
             COMMAND ${DOXYGEN_LAUNCHER_COMMAND} "${_file}"
             COMMENT "Opening ${_file}..."
@@ -379,18 +396,18 @@ function(_doxygen_list_inputs _out_var)
         endforeach ()
     elseif (INPUT_TARGET)
         _doxygen_get_target_property(_type ${INPUT_TARGET} TYPE)
-        _log_debug(_doxygen_list_inputs "${INPUT_TARGET} - type is ${_type}")
+        log_debug(_doxygen_list_inputs "${INPUT_TARGET} - type is ${_type}")
         if (_type STREQUAL INTERFACE_LIBRARY)
             message(STATUS "searching includes for interface library ${INPUT_TARGET}...")
             _doxygen_get_target_property(_include_directories
                     ${INPUT_TARGET}
                     INTERFACE_INCLUDE_DIRECTORIES)
         else()
-            message(STATUS "searching includes for ${INPUT_TARGET}...")
+            log_debug(_doxygen_list_inputs "searching includes for ${INPUT_TARGET}...")
             _doxygen_get_target_property(_include_directories
                     ${INPUT_TARGET}
                     INCLUDE_DIRECTORIES)
-            log_debug(STATUS "_include_directories = ${_include_directories}")
+            log_debug(_doxygen_list_inputs "_include_directories = ${_include_directories}")
         endif()
         foreach (_dir ${_include_directories})
             file(GLOB_RECURSE _inputs "${_dir}/*")

@@ -264,8 +264,6 @@ function(add_doxygen_targets)
             "${PROJECT_FILE}"
             "${OUTPUT_DIRECTORY}"
             "${DOCS_TARGET}"
-            ${GENERATE_HTML}
-            ${GENERATE_LATEX}
             ${GENERATE_PDF} ${_dependencies})
     if (DOXYGEN_OPEN_TARGETS)
         _doxygen_create_open_targets(

@@ -2,7 +2,7 @@ cmake_policy(SET CMP0057 NEW)
 
 function(_doxygen_load_project _project_file_name _out)
     unset(_properties)
-    log_info(doxygen-cmake "Loading project template ${_project_file_name}...")
+    log_info(doxygen "Load project template ${_project_file_name}...")
 
     file(STRINGS "${_project_file_name}" _file_lines)
     foreach(_line IN LISTS _file_lines)
@@ -32,6 +32,9 @@ function(_doxygen_save_project _project_file_name)
         string(APPEND _contents "${_key} = @${_key}@\n")
 
         set(_value "${${_key}}")
+        # Remove the backslashes we had to preserve to handle newlines
+        string(REPLACE "\\\n" "\n" _value "${_value}")
+
         string(SUBSTRING "${_value}" 0 1 _first_char)
         string(FIND "${_value}" " " _ind)
         string(FIND "${_value}" "\n" _multiline)
@@ -43,9 +46,10 @@ function(_doxygen_save_project _project_file_name)
         #message(STATUS "!!! _value=${_value}, _len = ${_len}")
     endforeach()
 
-    log_info(doxygen "Saving project file ${_project_file_name}.in ...")
+    log_info(doxygen "Save the project file template ${_project_file_name}.in ...")
     file(WRITE "${_project_file_name}.in" "${_contents}")
 
+    log_info(doxygen "Save the project file ${_project_file_name} ...")
     configure_file("${_project_file_name}.in" "${_project_file_name}" @ONLY)
 endfunction()
 
@@ -185,7 +189,7 @@ function(_doxygen_parse_input _property _type)
     endif()
     list(APPEND _report "${_property} becomes `${_value}`")
     foreach (_line IN LISTS _report)
-        log_debug(_doxygen_parse_input "${_line}")
+        log_trace(doxygen "${_line}")
     endforeach()
     set(${_property} "${_value}" PARENT_SCOPE)
 endfunction()
