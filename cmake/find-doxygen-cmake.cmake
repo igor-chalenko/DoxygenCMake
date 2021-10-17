@@ -1,6 +1,7 @@
 include(FindPackageHandleStandardArgs)
 
 find_package(Doxygen QUIET)
+find_package(LATEX QUIET OPTIONAL_COMPONENTS MAKEINDEX PDFLATEX)
 if (TARGET Doxygen::doxygen)
     # We must run the following at "include" time, not at function call time,
     # to find the path to this module rather than the path to a calling list file
