@@ -2,7 +2,7 @@ cmake_policy(SET CMP0057 NEW)
 
 function(_doxygen_load_project _project_file_name _out)
     unset(_properties)
-    log_info(doxygen "Load project template ${_project_file_name}...")
+    log_info(doxygen "Load the project file template ${_project_file_name}...")
 
     file(STRINGS "${_project_file_name}" _file_lines)
     foreach(_line IN LISTS _file_lines)
@@ -43,7 +43,6 @@ function(_doxygen_save_project _project_file_name)
             set(${_key} "\"${_value}\"")
             set(${_key} "\"${_value}\"" PARENT_SCOPE)
         endif()
-        #message(STATUS "!!! _value=${_value}, _len = ${_len}")
     endforeach()
 
     log_info(doxygen "Save the project file template ${_project_file_name}.in ...")

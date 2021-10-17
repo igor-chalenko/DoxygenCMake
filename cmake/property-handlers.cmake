@@ -138,8 +138,8 @@ endfunction()
 
 function(_doxygen_set_project_file _out_var)
     set(_template "${CMAKE_CURRENT_BINARY_DIR}/doxyfile.template.in")
-    if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/doxyfile.template.in")
-        log_debug(doxygen-cmake "Create default `project doxyfile.template.in` in `${CMAKE_CURRENT_BINARY_DIR}`")
+    if (NOT EXISTS "${_template}")
+        log_debug(doxygen "Create default project `doxyfile.template.in` in `${CMAKE_CURRENT_BINARY_DIR}`")
         execute_process(
            COMMAND ${DOXYGEN_EXECUTABLE} -s -g "${_template}"
            OUTPUT_QUIET
@@ -408,7 +408,6 @@ endfunction()
 # * an absolute path stays unchanged. Puts the result into ``_out_var``.
 ##############################################################################
 function(_doxygen_update_output_dir _directory _out_var)
-    log_debug(_doxygen_update_output_dir "_directory=${_directory}")
     if (_directory)
         if (NOT IS_ABSOLUTE "${_directory}")
             get_filename_component(_dir "${_directory}"
@@ -498,7 +497,7 @@ endfunction()
 # Otherwise, it's set to ``true``.
 ##############################################################################
 macro(_doxygen_update_generate_latex _generate_latex _out_var)
-    if ("${_generate_latex}" STREQUAL YES)
+    if (_generate_latex STREQUAL YES)
         if (NOT DEFINED LATEX_FOUND)
             log_info(doxygen-updater "LaTex docs requested, importing LATEX...")
             find_package(LATEX QUIET OPTIONAL_COMPONENTS MAKEINDEX PDFLATEX)

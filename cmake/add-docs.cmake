@@ -258,7 +258,7 @@ function(add_doxygen_targets)
             _output_project_file_name)
 
     _doxygen_collect_dependencies(_dependencies)
-    log_debug(doxygen-cmake "Collected dependencies: ${_dependencies}")
+    log_debug(doxygen "Collected project dependencies: ${_dependencies}")
 
     _doxygen_create_generate_docs_target(
             "${PROJECT_FILE}"

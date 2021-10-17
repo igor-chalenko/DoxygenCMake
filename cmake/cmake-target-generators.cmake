@@ -98,7 +98,6 @@ function(_doxygen_create_generate_docs_target _project_file _output_directory _d
             set(_pdf_command COMMAND ${CMAKE_MAKE_PROGRAM} -f ${_output_directory}/latex/Makefile)
         endif()
     endif()
-    message(STATUS "!!! _pdf_command = ${_pdf_command}")
 
     _doxygen_add_custom_command(OUTPUT "${__stamp_file}"
             COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_CURRENT_BINARY_DIR}"
@@ -205,7 +204,7 @@ endfunction()
 ##############################################################################
 function(_doxygen_create_open_targets _project_file _output_directory _docs_target _generate_html _generate_latex _generate_pdf)
     if (WIN32)
-        set(DOXYGEN_LAUNCHER_COMMAND start)
+        set(DOXYGEN_LAUNCHER_COMMAND start "\"\"")
     elseif (NOT APPLE)
         set(DOXYGEN_LAUNCHER_COMMAND xdg-open)
     else ()
@@ -233,7 +232,7 @@ function(_doxygen_create_open_targets _project_file _output_directory _docs_targ
             _doxygen_create_open_target(
                     ${_docs_target}.open_pdf
                     ${_docs_target}
-                    "${_output_directory}/pdf/refman.pdf")
+                    "${_output_directory}/latex/refman.pdf")
         endif ()
     endif ()
 endfunction()
@@ -259,9 +258,9 @@ endfunction()
 ##############################################################################
 function(_doxygen_create_open_target _target_name _parent_target_name _file)
     _doxygen_add_custom_target(${_target_name}
-            COMMAND ${DOXYGEN_LAUNCHER_COMMAND} "${_file}"
+            COMMAND ${DOXYGEN_LAUNCHER_COMMAND} ${_file}
             COMMENT "Opening ${_file}..."
-            VERBATIM)
+            )
     _doxygen_set_target_properties(${_target_name}
             PROPERTIES
             EXCLUDE_FROM_DEFAULT_BUILD TRUE
@@ -406,31 +405,28 @@ function(_doxygen_list_inputs _out_var)
             if (IS_DIRECTORY "${_dir}")
                 file(GLOB_RECURSE _inputs "${_dir}/*")
                 list(APPEND _all_inputs "${_inputs}")
-                log_debug(_doxygen_list_inputs "1. appending inputs ${_inputs}")
+                log_debug(doxygen.list_inputs "appending directory contents: ${_inputs}")
             else ()
                 list(APPEND _all_inputs "${_dir}")
-                log_debug(_doxygen_list_inputs "2. appending inputs ${_dir}")
+                log_debug(doxygen.list_inputs "appending a file ${_dir}")
             endif ()
         endforeach ()
     elseif (INPUT_TARGET)
         _doxygen_get_target_property(_type ${INPUT_TARGET} TYPE)
-        log_debug(_doxygen_list_inputs "${INPUT_TARGET} - type is ${_type}")
         if (_type STREQUAL INTERFACE_LIBRARY)
-            message(STATUS "searching includes for interface library ${INPUT_TARGET}...")
             _doxygen_get_target_property(_include_directories
                     ${INPUT_TARGET}
                     INTERFACE_INCLUDE_DIRECTORIES)
         else()
-            log_debug(_doxygen_list_inputs "searching includes for ${INPUT_TARGET}...")
             _doxygen_get_target_property(_include_directories
                     ${INPUT_TARGET}
                     INCLUDE_DIRECTORIES)
-            log_debug(_doxygen_list_inputs "_include_directories = ${_include_directories}")
+            log_debug(doxygen.list_inputs "include_directories of `${INPUT_TARGET}`: ${_include_directories}")
         endif()
         foreach (_dir ${_include_directories})
             file(GLOB_RECURSE _inputs "${_dir}/*")
             list(APPEND _all_inputs "${_inputs}")
-            log_debug(_doxygen_list_inputs "3. appending inputs ${_inputs} from ${_dir}")
+            log_debug(doxygen.list_inputs "appending ${_inputs} from ${_dir}")
         endforeach ()
     else ()
         message(FATAL_ERROR [=[
@@ -440,30 +436,30 @@ for `doxygen_add_docs`:
 2) Input project file didn't specify any inputs either.]=])
     endif ()
 
-    log_debug(_doxygen_list_inputs "_all_inputs: ${_all_inputs}")
+    log_debug(doxygen.list_inputs "collected inputs: ${_all_inputs}")
     set(${_out_var} "${_all_inputs}" PARENT_SCOPE)
 endfunction()
 
 function(_doxygen_collect_dependencies _out_var)
     unset(_result)
     if(LAYOUT_FILE)
-        log_debug(doxygen-cmake "LAYOUT_FILE ${LAYOUT_FILE} was supplied")
+        log_debug(doxygen "LAYOUT_FILE ${LAYOUT_FILE} was supplied")
         list(APPEND _result "${LAYOUT_FILE}")
     endif()
     if(HTML_EXTRA_STYLESHEET)
-        log_debug(doxygen-cmake "HTML_EXTRA_STYLESHEET ${HTML_EXTRA_STYLESHEET} was supplied")
+        log_debug(doxygen "HTML_EXTRA_STYLESHEET ${HTML_EXTRA_STYLESHEET} was supplied")
         list(APPEND _result "${HTML_EXTRA_STYLESHEET}")
     endif()
     if(HTML_FOOTER)
-        log_debug(doxygen-cmake "HTML_FOOTER ${HTML_FOOTER} was supplied")
+        log_debug(doxygen "HTML_FOOTER ${HTML_FOOTER} was supplied")
         list(APPEND _result "${HTML_FOOTER}")
     endif()
     if (HTML_HEADER)
-        log_debug(doxygen-cmake "HTML_HEADER ${HTML_HEADER} was supplied")
+        log_debug(doxygen "HTML_HEADER ${HTML_HEADER} was supplied")
         list(APPEND _result "${HTML_HEADER}")
     endif()
     if (HTML_EXTRA_FILES)
-        log_debug(doxygen-cmake "HTML_EXTRA_FILES ${HTML_EXTRA_FILES} was supplied")
+        log_debug(doxygen "HTML_EXTRA_FILES ${HTML_EXTRA_FILES} was supplied")
         separate_arguments(HTML_EXTRA_FILES)
         foreach(_file ${HTML_EXTRA_FILES})
             if (NOT IS_ABSOLUTE "${_file}")
