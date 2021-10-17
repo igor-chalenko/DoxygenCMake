@@ -69,7 +69,8 @@ cmake_policy(SET CMP0011 NEW)
 ##############################################################################
 
 
-function(_doxygen_create_generate_docs_target _project_file _output_directory _docs_target _generate_html _generate_latex _generate_pdf)
+function(_doxygen_create_generate_docs_target _project_file _output_directory _docs_target _generate_pdf)
+    log_info(doxygen "Create the target `${_docs_target}` to run `Doxygen::doxygen`")
     _doxygen_output_project_file_name(${_project_file} _updated_project_file)
     # collect inputs for `DEPENDS` parameter
     _doxygen_list_inputs(_inputs)
@@ -77,33 +78,70 @@ function(_doxygen_create_generate_docs_target _project_file _output_directory _d
     # collect outputs for the `OUTPUTS` parameter
     _doxygen_list_outputs("${_output_directory}" _files FILES)
 
-    log_debug(doxygen-cmake "DEPENDS: ${_project_file} ${_inputs} ${ARGN}")
     set(__stamp_file "${CMAKE_CURRENT_BINARY_DIR}/${_docs_target}.stamp")
 
+    set(_extra_dependencies
+            "Doxygen will run every time some of the following files are modified (relative to ${CMAKE_CURRENT_SOURCE_DIR}):")
+    _doxygen_log_path("${_project_file}" _extra_dependencies)
+    foreach(_input IN LISTS _inputs)
+        _doxygen_log_path("${_input}" _extra_dependencies)
+    endforeach()
+    foreach(_input ${ARGN})
+        _doxygen_log_path("${_input}" _extra_dependencies)
+    endforeach()
+
+    unset(_pdf_command)
+    if (_generate_pdf)
+        if (WIN32)
+            set(_pdf_command COMMAND ${_output_directory}/latex/make.bat)
+        else()
+            set(_pdf_command COMMAND ${CMAKE_MAKE_PROGRAM} -f ${_output_directory}/latex/Makefile)
+        endif()
+    endif()
+
     _doxygen_add_custom_command(OUTPUT "${__stamp_file}"
-            COMMAND ${CMAKE_COMMAND} -E remove_directory "${_output_directory}"
-            MAIN_DEPENDENCY "${_updated_project_file}"
-            DEPENDS "${_project_file}" "${_inputs}" "${ARGN}"
+            COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_CURRENT_BINARY_DIR}"
+            COMMAND "${CMAKE_COMMAND}" -E remove_directory "${_output_directory}"
+            MAIN_DEPENDENCY "${_project_file}"
+            DEPENDS "${_inputs}" "${ARGN}"
             COMMAND Doxygen::doxygen "${_updated_project_file}"
+            ${_pdf_command}
             COMMAND ${CMAKE_COMMAND} -E touch "${__stamp_file}"
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
             COMMENT "Generating documentation using ${_updated_project_file} ..."
             BYPRODUCTS "${_files}"
             VERBATIM)
 
-    log_info(_doxygen_add_custom_target: "adding the target ${_docs_target}")
+    _doxygen_add_custom_command(OUTPUT "${__stamp_file}"
+            COMMAND ${CMAKE_COMMAND} -E touch "${__stamp_file}"
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            COMMENT "Generating stamp file ..."
+            VERBATIM)
+
     _doxygen_add_custom_target(${_docs_target}
-            DEPENDS ${__stamp_file}
+            DEPENDS "${__stamp_file}" "${_output_directory}"
             SOURCES ${_inputs}
             )
-
-    if (_generate_pdf)
-        _doxygen_add_pdf_commands("${_output_directory}" "${_docs_target}")
-    endif()
 
     unset(__stamp_file)
 
 endfunction()
+
+function(dir_relative_to _dir _file _root)
+    message(STATUS "_file = ${_file}")
+    message(STATUS "_root = ${_root}")
+    file(RELATIVE_PATH _result "${_file}" "${_root}")
+    set(${_dir} "${_result}" PARENT_SCOPE)
+endfunction()
+
+macro(_doxygen_log_path _path _out_var)
+    if(IS_ABSOLUTE "${_path}")
+        file(RELATIVE_PATH _result  "${CMAKE_CURRENT_SOURCE_DIR}" "${_path}")
+        string(APPEND ${_out_var} " `${_result}`")
+    else()
+        string(APPEND ${_out_var} " `${_path}`")
+    endif()
+endmacro()
 
 ##############################################################################
 #.rst:
@@ -121,35 +159,32 @@ endfunction()
 # * ``_target_name`` the name of the target to add commands to
 ##############################################################################
 function(_doxygen_add_pdf_commands _output_dir _target_name)
-    file(MAKE_DIRECTORY ${_output_dir}/pdf)
+    #file(MAKE_DIRECTORY ${_output_dir}/pdf)
     if (WIN32)
-        _doxygen_add_custom_command(TARGET
-                ${_target_name}
-                POST_BUILD
-                COMMAND
-                make.bat
+        _doxygen_add_custom_command(DEPENDS "${_output_dir}"
+                OUTPUT "${_output_dir}/latex/refman.pdf"
+                COMMAND make.bat
+                COMMAND "${CMAKE_COMMAND}" -E copy
+                "${_output_dir}/latex/refman.pdf"
+                "${_output_dir}/pdf/refman.pdf"
+                COMMAND "${CMAKE_COMMAND}" -E rm "${_output_dir}/latex/refman.pdf"
                 WORKING_DIRECTORY
                 "${_output_dir}/latex"
                 COMMENT "Generating PDF..."
                 VERBATIM)
     else()
-        _doxygen_add_custom_command(TARGET
-                ${_target_name}
-                POST_BUILD
-                COMMAND
-                ${CMAKE_MAKE_PROGRAM} #> ${_output_directory}/latex.log 2>&1
-                WORKING_DIRECTORY
-                "${_output_dir}/latex"
+        _doxygen_add_custom_command(
+                DEPENDS "${_output_dir}"
+                OUTPUT "${_output_dir}/latex/refman.pdf"
+                COMMAND ${CMAKE_MAKE_PROGRAM} #> ${_output_directory}/latex.log 2>&1
+                COMMAND ${CMAKE_COMMAND} -E copy
+                "${_output_dir}/latex/refman.pdf"
+                "${_output_dir}/pdf/refman.pdf"
+                COMMAND ${CMAKE_COMMAND} -E rm "${_output_dir}/latex/refman.pdf"
+                WORKING_DIRECTORY "${_output_dir}/latex"
                 COMMENT "Generating PDF..."
                 VERBATIM)
     endif()
-    _doxygen_add_custom_command(TARGET ${_target_name} POST_BUILD
-            COMMENT "Copying refman.pdf to its own directory..."
-            COMMAND ${CMAKE_COMMAND} -E copy
-            "${_output_dir}/latex/refman.pdf"
-            "${_output_dir}/pdf/refman.pdf")
-    _doxygen_add_custom_command(TARGET ${_target_name} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E rm "${_output_dir}/latex/refman.pdf")
 endfunction()
 
 ##############################################################################
@@ -169,7 +204,7 @@ endfunction()
 ##############################################################################
 function(_doxygen_create_open_targets _project_file _output_directory _docs_target _generate_html _generate_latex _generate_pdf)
     if (WIN32)
-        set(DOXYGEN_LAUNCHER_COMMAND start)
+        set(DOXYGEN_LAUNCHER_COMMAND start "\"\"")
     elseif (NOT APPLE)
         set(DOXYGEN_LAUNCHER_COMMAND xdg-open)
     else ()
@@ -179,25 +214,25 @@ function(_doxygen_create_open_targets _project_file _output_directory _docs_targ
 
     if (DOXYGEN_LAUNCHER_COMMAND)
         if (_generate_html STREQUAL "YES" AND NOT TARGET ${_docs_target}.open_html)
-            log_info(doxygen-cmake "Create the target `${_docs_target}` to open the generated HTML files")
+            log_info(doxygen "Create the target `${_docs_target}.open_html` to open the generated HTML files")
             _doxygen_create_open_target(
                     ${_docs_target}.open_html
                     ${_docs_target}
                     "${_output_directory}/html/index.html")
         endif ()
         if (_generate_latex STREQUAL "YES" OR _generate_pdf AND NOT TARGET ${_docs_target}.open_latex)
-            log_info(doxygen-cmake "Create a target to open the generated LaTex files")
+            log_info(doxygen "Create the target `${_docs_target}.open_latex` to open the generated LaTex files")
             _doxygen_create_open_target(
                     ${_docs_target}.open_latex
                     ${_docs_target}
                     "${_output_directory}/latex/refman.tex")
         endif ()
         if (_generate_pdf AND NOT TARGET ${_docs_target}.open_pdf)
-            log_info(doxygen-cmake "Create a target to open the generated PDF file")
+            log_info(doxygen "Create the target `${_docs_target}.open_pdf` to open the generated PDF file")
             _doxygen_create_open_target(
                     ${_docs_target}.open_pdf
                     ${_docs_target}
-                    "${_output_directory}/pdf/refman.pdf")
+                    "${_output_directory}/latex/refman.pdf")
         endif ()
     endif ()
 endfunction()
@@ -222,11 +257,10 @@ endfunction()
 # * ``_file`` a file to open, such as `index.html`
 ##############################################################################
 function(_doxygen_create_open_target _target_name _parent_target_name _file)
-    log_info(doxygen "Adding launch target ${_target_name} for ${_file}...")
     _doxygen_add_custom_target(${_target_name}
-            COMMAND ${DOXYGEN_LAUNCHER_COMMAND} "${_file}"
+            COMMAND ${DOXYGEN_LAUNCHER_COMMAND} ${_file}
             COMMENT "Opening ${_file}..."
-            VERBATIM)
+            )
     _doxygen_set_target_properties(${_target_name}
             PROPERTIES
             EXCLUDE_FROM_DEFAULT_BUILD TRUE
@@ -371,31 +405,28 @@ function(_doxygen_list_inputs _out_var)
             if (IS_DIRECTORY "${_dir}")
                 file(GLOB_RECURSE _inputs "${_dir}/*")
                 list(APPEND _all_inputs "${_inputs}")
-                log_debug(_doxygen_list_inputs "1. appending inputs ${_inputs}")
+                log_debug(doxygen.list_inputs "appending directory contents: ${_inputs}")
             else ()
                 list(APPEND _all_inputs "${_dir}")
-                log_debug(_doxygen_list_inputs "2. appending inputs ${_dir}")
+                log_debug(doxygen.list_inputs "appending a file ${_dir}")
             endif ()
         endforeach ()
     elseif (INPUT_TARGET)
         _doxygen_get_target_property(_type ${INPUT_TARGET} TYPE)
-        _log_debug(_doxygen_list_inputs "${INPUT_TARGET} - type is ${_type}")
         if (_type STREQUAL INTERFACE_LIBRARY)
-            message(STATUS "searching includes for interface library ${INPUT_TARGET}...")
             _doxygen_get_target_property(_include_directories
                     ${INPUT_TARGET}
                     INTERFACE_INCLUDE_DIRECTORIES)
         else()
-            message(STATUS "searching includes for ${INPUT_TARGET}...")
             _doxygen_get_target_property(_include_directories
                     ${INPUT_TARGET}
                     INCLUDE_DIRECTORIES)
-            log_debug(STATUS "_include_directories = ${_include_directories}")
+            log_debug(doxygen.list_inputs "include_directories of `${INPUT_TARGET}`: ${_include_directories}")
         endif()
         foreach (_dir ${_include_directories})
             file(GLOB_RECURSE _inputs "${_dir}/*")
             list(APPEND _all_inputs "${_inputs}")
-            log_debug(_doxygen_list_inputs "3. appending inputs ${_inputs} from ${_dir}")
+            log_debug(doxygen.list_inputs "appending ${_inputs} from ${_dir}")
         endforeach ()
     else ()
         message(FATAL_ERROR [=[
@@ -405,30 +436,30 @@ for `doxygen_add_docs`:
 2) Input project file didn't specify any inputs either.]=])
     endif ()
 
-    log_debug(_doxygen_list_inputs "_all_inputs: ${_all_inputs}")
+    log_debug(doxygen.list_inputs "collected inputs: ${_all_inputs}")
     set(${_out_var} "${_all_inputs}" PARENT_SCOPE)
 endfunction()
 
 function(_doxygen_collect_dependencies _out_var)
     unset(_result)
     if(LAYOUT_FILE)
-        log_debug(doxygen-cmake "LAYOUT_FILE ${LAYOUT_FILE} was supplied")
+        log_debug(doxygen "LAYOUT_FILE ${LAYOUT_FILE} was supplied")
         list(APPEND _result "${LAYOUT_FILE}")
     endif()
     if(HTML_EXTRA_STYLESHEET)
-        log_debug(doxygen-cmake "HTML_EXTRA_STYLESHEET ${HTML_EXTRA_STYLESHEET} was supplied")
+        log_debug(doxygen "HTML_EXTRA_STYLESHEET ${HTML_EXTRA_STYLESHEET} was supplied")
         list(APPEND _result "${HTML_EXTRA_STYLESHEET}")
     endif()
     if(HTML_FOOTER)
-        log_debug(doxygen-cmake "HTML_FOOTER ${HTML_FOOTER} was supplied")
+        log_debug(doxygen "HTML_FOOTER ${HTML_FOOTER} was supplied")
         list(APPEND _result "${HTML_FOOTER}")
     endif()
     if (HTML_HEADER)
-        log_debug(doxygen-cmake "HTML_HEADER ${HTML_HEADER} was supplied")
+        log_debug(doxygen "HTML_HEADER ${HTML_HEADER} was supplied")
         list(APPEND _result "${HTML_HEADER}")
     endif()
     if (HTML_EXTRA_FILES)
-        log_debug(doxygen-cmake "HTML_EXTRA_FILES ${HTML_EXTRA_FILES} was supplied")
+        log_debug(doxygen "HTML_EXTRA_FILES ${HTML_EXTRA_FILES} was supplied")
         separate_arguments(HTML_EXTRA_FILES)
         foreach(_file ${HTML_EXTRA_FILES})
             if (NOT IS_ABSOLUTE "${_file}")
