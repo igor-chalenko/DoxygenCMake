@@ -17,7 +17,7 @@ endfunction()
 
 function(test_input_target)
     _doxygen_parse_inputs(INPUT_TARGET main)
-    assert_same(${PROJECT_FILE} ${CMAKE_CURRENT_BINARY_DIR}/doxyfile.template.in)
+    assert_same(${PROJECT_FILE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile.in)
     assert_same(${INPUT_TARGET} main)
 endfunction()
 
