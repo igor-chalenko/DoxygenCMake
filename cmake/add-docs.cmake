@@ -38,7 +38,6 @@ include(${_doxygen_dir}/property-handlers.cmake)
 #                     [DOCS_TARGET] <name>
 #                     [INPUT_TARGET] <name>
 #                     [INSTALL_COMPONENT] <name>
-#                     [GENERATE_HTML] <YES|NO>
 #                     [GENERATE_PDF]
 #                     [<PROPERTY> <value>]...)
 #
