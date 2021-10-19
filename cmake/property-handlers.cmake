@@ -149,111 +149,6 @@ function(_doxygen_set_project_file _out_var)
     endif()
     set(${_out_var} "${_template}" PARENT_SCOPE)
 endfunction()
-##############################################################################
-#.rst:
-# .. cmake:command:: _doxygen_update_project_file
-#
-# .. code-block:: cmake
-#
-#   _doxygen_update_project_file(_file_name _out_var)
-#
-# Transforms a relative file name ``_file_name`` into an absolute one, if
-# needed, and puts the result into ``_out_var``. Does nothing otherwise.
-##############################################################################
-function(_doxygen_update_project_file _file_name _out_var)
-    assert_not_empty("${_file_name}")
-    set(_result "")
-    if (NOT IS_ABSOLUTE "${_file_name}")
-        get_filename_component(_result
-                "${_file_name}" ABSOLUTE BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-        log_debug(doxygen.updaters "setting ${_out_var} to ${_result}")
-        set(${_out_var} "${_result}" PARENT_SCOPE)
-    else()
-        set(${_out_var} "${_file_name}" PARENT_SCOPE)
-    endif ()
-endfunction()
-
-function(_doxygen_update_layout_file _file_name _out_var)
-    unset(_result)
-    if ("${_file_name}" STREQUAL "")
-        set(${_out_var} "" PARENT_SCOPE)
-    else()
-        if (NOT IS_ABSOLUTE "${_file_name}")
-            get_filename_component(_result
-                    "${_file_name}" ABSOLUTE BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-            log_debug(doxygen.updaters "setting ${_out_var} to ${_result}")
-            set(${_out_var} "${_result}" PARENT_SCOPE)
-        else()
-            set(${_out_var} "${_file_name}" PARENT_SCOPE)
-        endif ()
-    endif ()
-endfunction()
-
-function(_doxygen_update_html_header _file_name _out_var)
-    unset(_result)
-    if ("${_file_name}" STREQUAL "")
-        set(${_out_var} "" PARENT_SCOPE)
-    else()
-        if (NOT IS_ABSOLUTE "${_file_name}")
-            get_filename_component(_result
-                    "${_file_name}" ABSOLUTE BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-            log_debug(doxygen.updaters "setting ${_out_var} to ${_result}")
-            set(${_out_var} "${_result}" PARENT_SCOPE)
-        else()
-            set(${_out_var} "${_file_name}" PARENT_SCOPE)
-        endif ()
-    endif ()
-endfunction()
-
-function(_doxygen_update_html_footer _file_name _out_var)
-    unset(_result)
-    if ("${_file_name}" STREQUAL "")
-        set(${_out_var} "" PARENT_SCOPE)
-    else()
-        if (NOT IS_ABSOLUTE "${_file_name}")
-            get_filename_component(_result
-                    "${_file_name}" ABSOLUTE BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-            log_debug(doxygen.updaters "setting ${_out_var} to ${_result}")
-            set(${_out_var} "${_result}" PARENT_SCOPE)
-        else()
-            set(${_out_var} "${_file_name}" PARENT_SCOPE)
-        endif ()
-    endif ()
-endfunction()
-
-function(_doxygen_update_html_extra_stylesheet _file_name _out_var)
-    unset(_result)
-    if ("${_file_name}" STREQUAL "")
-        set(${_out_var} "" PARENT_SCOPE)
-    else()
-        if (NOT IS_ABSOLUTE "${_file_name}")
-            get_filename_component(_result
-                    "${_file_name}" ABSOLUTE BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-            log_debug(doxygen.updaters "setting ${_out_var} to ${_result}")
-            set(${_out_var} "${_result}" PARENT_SCOPE)
-        else()
-            set(${_out_var} "${_file_name}" PARENT_SCOPE)
-        endif ()
-    endif ()
-endfunction()
-
-
-function(_doxygen_update_html_extra_files _file_names _out_var)
-    unset(_result)
-    if ("${_file_names}" STREQUAL "")
-        set(${_out_var} "" PARENT_SCOPE)
-    else()
-        separate_arguments(_file_names)
-        foreach(_file ${_file_names})
-            if (NOT IS_ABSOLUTE "${_file}")
-                list(APPEND _result "${CMAKE_CURRENT_SOURCE_DIR}/${_file}")
-            else()
-                list(APPEND _result "${_file}")
-            endif()
-        endforeach()
-        set(${_out_var} "${_result}" PARENT_SCOPE)
-    endif()
-endfunction()
 
 ##############################################################################
 #.rst:
@@ -328,11 +223,6 @@ function(_doxygen_update_input_source _paths _out_var)
     if (_paths)
         separate_arguments(_paths)
         foreach (_path ${_paths})
-            if (NOT IS_ABSOLUTE "${_path}")
-                get_filename_component(_path
-                        "${_path}" ABSOLUTE
-                        BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-            endif ()
             list(APPEND _inputs "${_path}")
         endforeach ()
     else ()
@@ -365,34 +255,6 @@ function(_doxygen_update_input_source _paths _out_var)
     endforeach()
     #message(STATUS "input sources after update: ${_result}")
     set(${_out_var} "${_result}" PARENT_SCOPE)
-endfunction()
-
-##############################################################################
-#.rst:
-# .. cmake:command:: _doxygen_update_example_source
-#
-# .. code-block:: cmake
-#
-#   _doxygen_update_example_source(_directories _out_var)
-#
-# Walks through directory paths ``_directories`` and updates relative
-# ones by prepending ``CMAKE_CURRENT_SOURCE_DIR``. Does nothing
-# to absolute directory paths. Writes updated list to ``_out_var``.
-##############################################################################
-function(_doxygen_update_example_source _directories _out_var)
-    if (_directories)
-        separate_arguments(_directories)
-        set(_result "")
-        foreach (_dir ${_directories})
-            if (NOT IS_ABSOLUTE "${_dir}")
-                get_filename_component(_dir
-                        "${_dir}" ABSOLUTE
-                        BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-            endif ()
-            list(APPEND _result "${_dir}")
-        endforeach ()
-        set(${_out_var} "${_result}" PARENT_SCOPE)
-    endif ()
 endfunction()
 
 ##############################################################################

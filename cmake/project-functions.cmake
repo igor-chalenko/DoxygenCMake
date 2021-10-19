@@ -57,12 +57,13 @@ macro(_doxygen_parse_inputs)
             PROJECT_FILE
             STRING
             SETTER "set_project_file"
-            UPDATER "update_project_file" ${ARGN})
+            ${ARGN})
     _doxygen_parse_input(INPUT_TARGET STRING SETTER "set_input_target" ${ARGN})
     _doxygen_parse_input(DOCS_TARGET STRING UPDATER "update_docs_target" DEFAULT "${_input_target}.doxygen" ${ARGN})
     _doxygen_parse_input(INSTALL_COMPONENT STRING DEFAULT docs ${ARGN})
     _doxygen_parse_input(GENERATE_HTML STRING DEFAULT YES ${ARGN})
     _doxygen_parse_input(GENERATE_PDF OPTION DEFAULT NO ${ARGN})
+    _doxygen_parse_input(WORKING_DIRECTORY STRING DEFAULT "${CMAKE_CURRENT_SOURCE_DIR}")
 endmacro()
 
 macro(_doxygen_property _index _name)
@@ -86,25 +87,13 @@ macro(_doxygen_update_properties _properties)
     _doxygen_property(_specials HAVE_DOT SETTER "set_have_dot" OVERWRITE)
     _doxygen_property(_specials DOT_PATH SETTER "set_dot_path" OVERWRITE)
     _doxygen_property(_specials DIA_PATH SETTER "set_dia_path" OVERWRITE)
-    _doxygen_property(_specials EXAMPLE_PATH
-            SETTER "set_example_source"
-            UPDATER "update_example_source")
+    _doxygen_property(_specials EXAMPLE_PATH SETTER "set_example_source")
     _doxygen_property(_specials WARN_FORMAT
             SETTER "set_warn_format" OVERWRITE)
     _doxygen_property(_specials MAKEINDEX_CMD_NAME
             UPDATER "update_makeindex_cmd_name") # OVERWRITE)
     _doxygen_property(_specials LATEX_CMD_NAME
             UPDATER "update_latex_cmd_name")# OVERWRITE)
-    _doxygen_property(_specials LAYOUT_FILE
-            UPDATER "update_layout_file")
-    _doxygen_property(_specials HTML_HEADER
-            UPDATER "update_html_header")
-    _doxygen_property(_specials HTML_FOOTER
-            UPDATER "update_html_footer")
-    _doxygen_property(_specials HTML_EXTRA_STYLESHEET
-            UPDATER "update_html_extra_stylesheet")
-    _doxygen_property(_specials HTML_EXTRA_FILES
-            UPDATER "update_html_extra_files")
 
     _doxygen_property(_specials PROJECT_BRIEF DEFAULT "${PROJECT_DESCRIPTION}" OVERWRITE)
     _doxygen_property(_specials PROJECT_NAME DEFAULT "${PROJECT_NAME}" OVERWRITE)
