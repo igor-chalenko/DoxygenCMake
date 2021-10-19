@@ -38,7 +38,7 @@ cmake_policy(SET CMP0011 NEW)
 #
 #   .. code-block:: bash
 #
-#      ${DOXYGEN_LAUNCHER_COMMAND} ${OUTPUT_DIRECTORY}/pdf/refman.pdf
+#      ${DOXYGEN_LAUNCHER_COMMAND} ${OUTPUT_DIRECTORY}/latex/refman.pdf
 #
 #   This target is created if PDF generation was enabled.
 #
@@ -69,7 +69,7 @@ cmake_policy(SET CMP0011 NEW)
 ##############################################################################
 
 
-function(_doxygen_create_generate_docs_target _project_file _output_directory _docs_target _generate_pdf)
+function(_doxygen_create_generate_docs_target _working_directory _project_file _output_directory _docs_target _generate_pdf)
     log_info(doxygen "Create the target `${_docs_target}` to run `Doxygen::doxygen`")
     _doxygen_output_project_file_name(${_project_file} _updated_project_file)
     # collect inputs for `DEPENDS` parameter
@@ -107,7 +107,7 @@ function(_doxygen_create_generate_docs_target _project_file _output_directory _d
             COMMAND Doxygen::doxygen "${_updated_project_file}"
             ${_pdf_command}
             COMMAND ${CMAKE_COMMAND} -E touch "${__stamp_file}"
-            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            WORKING_DIRECTORY "${_working_directory}"
             COMMENT "Generating documentation using ${_updated_project_file} ..."
             BYPRODUCTS "${_files}"
             VERBATIM)

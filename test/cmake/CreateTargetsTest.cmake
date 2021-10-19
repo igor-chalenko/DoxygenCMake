@@ -17,6 +17,7 @@ function(test_create_targets)
     configure_file(${_project_source_dir}/test/cmake/Doxyfile2
             ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile2 @ONLY)
     _doxygen_create_generate_docs_target(
+            "${WORKING_DIRECTORY}"
             "${PROJECT_FILE}"
             "${OUTPUT_DIRECTORY}"
             ${DOCS_TARGET}

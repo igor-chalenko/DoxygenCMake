@@ -7,7 +7,7 @@ set(PROJECT_NAME test)
 
 function(test_project_file)
     _doxygen_parse_inputs(PROJECT_FILE Doxyfile)
-    assert_same(${PROJECT_FILE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+    assert_same(${PROJECT_FILE} Doxyfile)
     assert_empty("${INPUT_TARGET}")
     assert_same(${INSTALL_COMPONENT} docs)
     assert_same(${DOCS_TARGET} test.doxygen)

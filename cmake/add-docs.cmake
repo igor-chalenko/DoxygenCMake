@@ -305,6 +305,7 @@ function(add_doxygen_targets)
     log_debug(doxygen "Collected project dependencies: ${_dependencies}")
 
     _doxygen_create_generate_docs_target(
+            "${WORKING_DIRECTORY}"
             "${PROJECT_FILE}"
             "${OUTPUT_DIRECTORY}"
             "${DOCS_TARGET}"
