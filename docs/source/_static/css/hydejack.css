@@ -1,0 +1,101 @@
+body {
+    font: 400 16px/22px Tinos,sans-serif;
+}
+
+.wy-nav-side {
+    background: #202020 center / cover;
+}
+
+.wy-menu-vertical {
+    width: 300px;
+    padding-right: 1.1em;
+}
+
+.wy-menu-vertical p.caption {
+    padding-left: 1em;
+}
+
+/*
+.wy-menu-vertical a {
+    line-height: 1.75;
+    display: block;
+    position: relative;
+    color: white;
+    text-decoration: none;
+    width: 80%;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    transition: color 500ms, border-color 250ms;
+    padding: 0.4045em 0;
+    margin-left: 1.618rem;
+}
+
+*/
+
+.wy-menu-vertical a {
+    line-height: 1.75;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    transition: color 500ms, border-color 250ms;
+    padding: 0.4045em 0;
+}
+
+.wy-menu-vertical ul {
+    margin-bottom: 0;
+    margin-left: 0.9em;
+    /*margin-right: 1.1em;*/
+}
+
+.wy-menu-vertical a:hover {
+    text-decoration: none;
+    border-color: #fff;
+    background: #202020;
+}
+
+.wy-menu-vertical li.current a {
+    color: white;
+    padding-left: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    border-right: 0;
+    /* padding: .4045em 2.427em;*/
+}
+
+.wy-menu-vertical li.current {
+    background: #202020;
+    color: white;
+}
+
+.wy-menu-vertical li.toctree-l1.current > a {
+    /*border-bottom: 0;*/
+    border-top: 0;
+}
+
+.toctree-l3, .toctree-l3 .current {
+    margin-right: 0;
+}
+
+.wy-menu-vertical li.current a:hover {
+    background: #202020;
+    color: white;
+}
+
+.wy-menu-vertical li.current > a, .wy-menu-vertical li.on a {
+    background: #202020;
+    color: white;
+}
+
+.wy-menu-vertical li.toctree-l2.current > a, .wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a {
+    background: #202020;
+    color: white;
+    padding-left: 0;
+}
+
+.wy-menu-vertical li span.toctree-expand {
+    line-height: 2.5em;
+}
+
+.wy-menu-vertical li.current > a span.toctree-expand, .wy-menu-vertical li.on a span.toctree-expand {
+    line-height: 2.5em;
+}
+
+.rst-content .linenodiv pre, .rst-content div[class^="highlight"] pre, .rst-content pre.literal-block {
+    line-height: 1.7;
+}

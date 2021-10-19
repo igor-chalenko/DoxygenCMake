@@ -6,7 +6,7 @@ if (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME)
 
     enable_testing()
     add_subdirectory(test)
-    #add_subdirectory(doc)
+    add_subdirectory(docs)
 
     if (${CMAKE_VERSION} VERSION_LESS 3.14)
         if (NOT DEFINED CMAKE_INSTALL_LIBDIR)
