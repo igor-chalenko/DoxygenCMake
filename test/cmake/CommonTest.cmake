@@ -1,4 +1,4 @@
-# override
+# overrides
 function(_doxygen_get_target_property _out_var _target _property)
     global_get(add.target.${_target} ${_property} _value)
     set(${_out_var} "${_value}" PARENT_SCOPE)

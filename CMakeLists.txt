@@ -40,4 +40,6 @@ if (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME)
     install(DIRECTORY "cmake/"
             DESTINATION ${_DESTINATION}
             PATTERN cmake/3rd-party/InstallBasicPackageFiles.cmake EXCLUDE)
+else()
+    set(PACKAGE_PREFIX_DIR "${PROJECT_SOURCE_DIR}")
 endif()

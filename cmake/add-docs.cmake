@@ -5,12 +5,9 @@
 # https://opensource.org/licenses/MIT
 ##############################################################################
 
-# suppress the warning coming from empty arch check `if("TRUE)`
-cmake_policy(SET CMP0012 NEW)
-
 get_filename_component(_doxygen_dir ${CMAKE_CURRENT_LIST_FILE} PATH)
 
-find_package(cmake-utilities REQUIRED)
+_doxygen_find_package(cmake-utilities REQUIRED)
 
 parameter_to_function_prefix(doxygen global_get global_set
         global_unset global_append global_clear global_index)
