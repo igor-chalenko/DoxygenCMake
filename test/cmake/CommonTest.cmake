@@ -3,10 +3,8 @@ set_property(GLOBAL PROPERTY current.dir "${_current_dir}")
 
 include(${_current_dir}/Obtain.cmake)
 
-message(STATUS "CMAKE_PREFIX_PATH = ${CMAKE_PREFIX_PATH}")
-find_package(doxygen-cmake REQUIRED)
-message(STATUS "doxygen-cmake_DIR = ${doxygen-cmake_DIR}")
-add_to_registry(self "${doxygen-cmake_DIR}")
+add_to_registry(self "${doxygen.cmake.path}")
+import(self::add-docs)
 
 # overrides
 function(_doxygen_get_target_property _out_var _target _property)

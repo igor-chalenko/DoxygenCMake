@@ -4,21 +4,13 @@ add_executable(main src/main.cc)
 set_target_properties(main PROPERTIES EXCLUDE_FROM_ALL 1)
 target_include_directories(main PUBLIC include include5)
 
-add_test(NAME prepare_installation
-        COMMAND ${CMAKE_MAKE_PROGRAM} DESTDIR=${CMAKE_CURRENT_BINARY_DIR}/share/cmake install
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        )
-
-
 add_test(
         NAME global_map_test
         COMMAND ${CMAKE_COMMAND}
-        -DCMAKE_PREFIX_PATH="${CMAKE_INSTALL_PREFIX};${CMAKE_CURRENT_BINARY_DIR}/share/cmake"
+        -DCMAKE_PREFIX_PATH=${CMAKE_INSTALL_PREFIX}
+        -Ddoxygen.cmake.path=${PROJECT_SOURCE_DIR}/../cmake
         -P ${PROJECT_SOURCE_DIR}/cmake/GlobalMapTest.cmake
 )
-
-set_tests_properties(prepare_installation PROPERTIES FIXTURES_SETUP Db)
-set_tests_properties(global_map_test PROPERTIES FIXTURES_REQUIRED Db)
 
 add_test(
         NAME parse_inputs_test
