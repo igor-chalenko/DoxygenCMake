@@ -7,14 +7,14 @@
 
 get_filename_component(_doxygen_dir ${CMAKE_CURRENT_LIST_FILE} PATH)
 
-_doxygen_find_package(cmake-utilities REQUIRED)
+import(cmake-utilities::Testing)
+import(cmake-utilities::Logging)
+import(cmake-utilities::DynamicFunctions)
 
 parameter_to_function_prefix(doxygen global_get global_set
         global_unset global_append global_clear global_index)
 
-include(${_doxygen_dir}/project-functions.cmake)
-include(${_doxygen_dir}/cmake-target-generators.cmake)
-include(${_doxygen_dir}/property-handlers.cmake)
+include(${_doxygen_dir}/overridable.cmake)
 
 ##############################################################################
 #.rst:
@@ -207,7 +207,8 @@ include(${_doxygen_dir}/property-handlers.cmake)
 #
 #      ${DOXYGEN_LAUNCHER_COMMAND} ${OUTPUT_DIRECTORY}/html/index.html
 #
-#   This target is created unless HTML generation was disabled.
+#   This target is created if HTML generation was requested and
+#   ``DOXYGEN_OPEN_TARGETS`` is enabled.
 #
 #   * ``${TARGET_NAME}.latex``:
 #
@@ -215,7 +216,8 @@ include(${_doxygen_dir}/property-handlers.cmake)
 #
 #      ${DOXYGEN_LAUNCHER_COMMAND} ${OUTPUT_DIRECTORY}/latex/refman.tex
 #
-#   This target is created if LaTex generation was enabled.
+#   This target is created if LaTex generation was enabled and
+#   ``DOXYGEN_OPEN_TARGETS`` is enabled.
 #
 #   * ``${TARGET_NAME}.pdf``:
 #
@@ -223,7 +225,8 @@ include(${_doxygen_dir}/property-handlers.cmake)
 #
 #      ${DOXYGEN_LAUNCHER_COMMAND} ${OUTPUT_DIRECTORY}/pdf/refman.pdf
 #
-#   This target is created if PDF generation was enabled.
+#   This target is created if PDF generation was enabled and
+#   ``DOXYGEN_OPEN_TARGETS`` is enabled.
 #
 # In addition to the above, ``doxygen-cmake`` adds documentation files
 # to the ``install`` target, if ``DOXYGEN_INSTALL_DOCS`` is enabled.
@@ -328,6 +331,967 @@ function(add_doxygen_targets)
     _doxygen_save_project("${_output_project_file_name}" ${_properties})
 endfunction()
 
+function(_doxygen_create_generate_docs_target _working_directory _project_file _output_directory _docs_target _generate_pdf)
+    log_info(doxygen "Create the target `${_docs_target}` to run `Doxygen::doxygen`")
+    _doxygen_output_project_file_name(${_project_file} _updated_project_file)
+    # collect inputs for `DEPENDS` parameter
+    _doxygen_list_inputs(_inputs)
+    assert_not_empty("${_inputs}")
+    # collect outputs for the `OUTPUTS` parameter
+    _doxygen_list_outputs("${_output_directory}" _files FILES)
+
+    set(__stamp_file "${CMAKE_CURRENT_BINARY_DIR}/${_docs_target}.stamp")
+
+    set(_extra_dependencies
+            "Doxygen will run every time some of the following files are modified (relative to ${CMAKE_CURRENT_SOURCE_DIR}):")
+    _doxygen_log_path("${_project_file}" _extra_dependencies)
+    foreach(_input IN LISTS _inputs)
+        _doxygen_log_path("${_input}" _extra_dependencies)
+    endforeach()
+    foreach(_input ${ARGN})
+        _doxygen_log_path("${_input}" _extra_dependencies)
+    endforeach()
+
+    unset(_pdf_command)
+    if (_generate_pdf)
+        if (WIN32)
+            set(_pdf_command COMMAND ${_output_directory}/latex/make.bat)
+        else()
+            set(_pdf_command COMMAND ${CMAKE_MAKE_PROGRAM} -f ${_output_directory}/latex/Makefile)
+        endif()
+    endif()
+
+    _doxygen_add_custom_command(OUTPUT "${__stamp_file}"
+            COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_CURRENT_BINARY_DIR}"
+            COMMAND "${CMAKE_COMMAND}" -E remove_directory "${_output_directory}"
+            MAIN_DEPENDENCY "${_project_file}"
+            DEPENDS "${_inputs}" "${ARGN}"
+            COMMAND Doxygen::doxygen "${_updated_project_file}"
+            ${_pdf_command}
+            COMMAND ${CMAKE_COMMAND} -E touch "${__stamp_file}"
+            WORKING_DIRECTORY "${_working_directory}"
+            COMMENT "Generating documentation using ${_updated_project_file} ..."
+            BYPRODUCTS "${_files}"
+            VERBATIM)
+
+    _doxygen_add_custom_command(OUTPUT "${__stamp_file}"
+            COMMAND ${CMAKE_COMMAND} -E touch "${__stamp_file}"
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            COMMENT "Generating stamp file ..."
+            VERBATIM)
+
+    _doxygen_add_custom_target(${_docs_target}
+            DEPENDS "${__stamp_file}" "${_output_directory}"
+            SOURCES ${_inputs}
+            )
+
+    unset(__stamp_file)
+
+endfunction()
+
+function(dir_relative_to _dir _file _root)
+    message(STATUS "_file = ${_file}")
+    message(STATUS "_root = ${_root}")
+    file(RELATIVE_PATH _result "${_file}" "${_root}")
+    set(${_dir} "${_result}" PARENT_SCOPE)
+endfunction()
+
+macro(_doxygen_log_path _path _out_var)
+    if(IS_ABSOLUTE "${_path}")
+        file(RELATIVE_PATH _result  "${CMAKE_CURRENT_SOURCE_DIR}" "${_path}")
+        string(APPEND ${_out_var} " `${_result}`")
+    else()
+        string(APPEND ${_out_var} " `${_path}`")
+    endif()
+endmacro()
+
+##############################################################################
+#.rst:
+# .. cmake:command:: _doxygen_add_pdf_commands
+#
+# ..  code-block:: cmake
+#
+#    _doxygen_add_pdf_commands(<target name>)
+#
+# Adds PDF generation commands to a previously created `doxygen` target
+# ``_target_name``.
+#
+# Parameters:
+#
+# * ``_target_name`` the name of the target to add commands to
+##############################################################################
+function(_doxygen_add_pdf_commands _output_dir _target_name)
+    #file(MAKE_DIRECTORY ${_output_dir}/pdf)
+    if (WIN32)
+        _doxygen_add_custom_command(DEPENDS "${_output_dir}"
+                OUTPUT "${_output_dir}/latex/refman.pdf"
+                COMMAND make.bat
+                COMMAND "${CMAKE_COMMAND}" -E copy
+                "${_output_dir}/latex/refman.pdf"
+                "${_output_dir}/pdf/refman.pdf"
+                COMMAND "${CMAKE_COMMAND}" -E rm "${_output_dir}/latex/refman.pdf"
+                WORKING_DIRECTORY
+                "${_output_dir}/latex"
+                COMMENT "Generating PDF..."
+                VERBATIM)
+    else()
+        _doxygen_add_custom_command(
+                DEPENDS "${_output_dir}"
+                OUTPUT "${_output_dir}/latex/refman.pdf"
+                COMMAND ${CMAKE_MAKE_PROGRAM} #> ${_output_directory}/latex.log 2>&1
+                COMMAND ${CMAKE_COMMAND} -E copy
+                "${_output_dir}/latex/refman.pdf"
+                "${_output_dir}/pdf/refman.pdf"
+                COMMAND ${CMAKE_COMMAND} -E rm "${_output_dir}/latex/refman.pdf"
+                WORKING_DIRECTORY "${_output_dir}/latex"
+                COMMENT "Generating PDF..."
+                VERBATIM)
+    endif()
+endfunction()
+
+##############################################################################
+#.rst:
+# .. cmake:command:: _doxygen_add_open_targets
+#
+# ..  code-block:: cmake
+#
+#    _doxygen_add_open_targets(<name prefix> <output directory>)
+#
+# Parameters:
+#
+# * ``_name_prefix`` a string prepended to the names of the targets being
+#   created
+# * ``_output_dir`` a directory where documentation files will be generated
+#   by the ``doxygen`` target
+##############################################################################
+function(_doxygen_create_open_targets _project_file _output_directory _docs_target _generate_html _generate_latex _generate_pdf)
+    if (WIN32)
+        set(DOXYGEN_LAUNCHER_COMMAND start "\"\"")
+    elseif (NOT APPLE)
+        set(DOXYGEN_LAUNCHER_COMMAND xdg-open)
+    else ()
+        # I didn't test this
+        set(DOXYGEN_LAUNCHER_COMMAND open)
+    endif ()
+
+    if (DOXYGEN_LAUNCHER_COMMAND)
+        if (_generate_html STREQUAL "YES" AND NOT TARGET ${_docs_target}.open_html)
+            log_info(doxygen "Create the target `${_docs_target}.open_html` to open the generated HTML files")
+            _doxygen_create_open_target(
+                    ${_docs_target}.open_html
+                    ${_docs_target}
+                    "${_output_directory}/html/index.html")
+        endif ()
+        if (_generate_latex STREQUAL "YES" OR _generate_pdf AND NOT TARGET ${_docs_target}.open_latex)
+            log_info(doxygen "Create the target `${_docs_target}.open_latex` to open the generated LaTex files")
+            _doxygen_create_open_target(
+                    ${_docs_target}.open_latex
+                    ${_docs_target}
+                    "${_output_directory}/latex/refman.tex")
+        endif ()
+        if (_generate_pdf AND NOT TARGET ${_docs_target}.open_pdf)
+            log_info(doxygen "Create the target `${_docs_target}.open_pdf` to open the generated PDF file")
+            _doxygen_create_open_target(
+                    ${_docs_target}.open_pdf
+                    ${_docs_target}
+                    "${_output_directory}/latex/refman.pdf")
+        endif ()
+    endif ()
+endfunction()
+
+##############################################################################
+#.rst:
+# .. cmake:command:: _doxygen_create_open_target
+#
+# ..  code-block:: cmake
+#
+#   _doxygen_create_open_target(<target name> <parent target name> <file name>)
+#
+# Creates a target that opens a given file for viewing. Synonymous
+# to `start file` on Windows or `xdg-open file` on Gnome desktops.
+#
+# Parameters:
+#
+# * ``_target_name`` a name of the newly created target that should open
+#   the given file
+# * ``_parent_target_name`` a name of the target that generates documentation;
+#   serves as a dependency for the target ``_target_name``
+# * ``_file`` a file to open, such as `index.html`
+##############################################################################
+function(_doxygen_create_open_target _target_name _parent_target_name _file)
+    _doxygen_add_custom_target(${_target_name}
+            COMMAND ${DOXYGEN_LAUNCHER_COMMAND} ${_file}
+            COMMENT "Opening ${_file}..."
+            )
+    _doxygen_set_target_properties(${_target_name}
+            PROPERTIES
+            EXCLUDE_FROM_DEFAULT_BUILD TRUE
+            EXCLUDE_FROM_ALL TRUE)
+    _doxygen_add_dependencies(${_target_name} ${_parent_target_name})
+endfunction()
+
+##############################################################################
+#.rst:
+# .. cmake:command:: _doxygen_install_docs
+#
+# Sets up install commands for the generated documentation.
+#
+# * HTML files are installed under ``_destination``/``html``
+# * LaTex files are installed under ``_destination``/``latex``
+# * PDF file is installed under ``_destination``/``pdf``
+#
+# These
+##############################################################################
+function(_doxygen_create_install_targets)
+    _doxygen_get(OUTPUT_DIRECTORY _output_dir)
+    _doxygen_get(INSTALL_COMPONENT _component)
+
+    if (NOT DEFINED CMAKE_INSTALL_DOCDIR)
+        set(CMAKE_INSTALL_DOCDIR "${CMAKE_INSTALL_PREFIX}")
+        include(GNUInstallDirs)
+    endif ()
+    set(_destination ${CMAKE_INSTALL_DOCDIR})
+
+    _doxygen_list_outputs("${_output_dir}" _files DIRECTORIES)
+
+    foreach (_artifact ${_files})
+        string(REPLACE " " "\\ " _new_artifact "${_artifact}")
+        _doxygen_log(INFO "install ${_new_artifact} to ${_destination}...")
+        install(DIRECTORY "${_new_artifact}"
+                DESTINATION "${_destination}"
+                COMPONENT ${_component}
+                )
+    endforeach ()
+endfunction()
+
+
+##############################################################################
+#.rst:
+# .. cmake:command:: _doxygen_list_outputs
+#
+# ..  code-block:: cmake
+#
+#   _doxygen_list_outputs(<mode> <output variable>)
+#
+# Collects configured `doxygen` outputs. Two modes of operation are
+# supported, controlled by the ``mode`` parameter. The following ``mode`` values
+# are accepted:
+#
+# * ``FILES``
+#   In this mode, ``index.html``, ``index.xml``, ``refman.tex``, and
+#   ``refman.pdf`` are added to the result, depending on whether
+#   the corresponding format generation was requested.
+# * ``DIRECTORIES``
+#   In this mode, ``html``, ``xml``, ``latex``, and ``pdf`` directories are
+#   added to the result (their absolute paths, to be precise).
+##############################################################################
+function(_doxygen_list_outputs _option _out_var)
+    set(_out "")
+    if (_option STREQUAL FILES)
+        if (GENERATE_HTML STREQUAL "YES")
+            set(_html_index_file "${_output_dir}/html/index.html")
+            list(APPEND _out "${_html_index_file}")
+        endif ()
+        if (GENERATE_XML STREQUAL "YES")
+            set(_xml_index_file "${_output_dir}/xml/index.xml")
+            list(APPEND _out "${_xml_index_file}")
+        endif ()
+        if (GENERATE_LATEX STREQUAL "YES")
+            set(_latex_index_file "${_output_dir}/latex/refman.tex")
+            list(APPEND _out "${_latex_index_file}")
+        endif ()
+        if (GENERATE_PDF)
+            set(_pdf_file "${_output_dir}/pdf/refman.pdf")
+            list(APPEND _out "${_pdf_file}")
+        endif ()
+    else ()
+        if (GENERATE_LATEX STREQUAL "YES")
+            list(APPEND _out "${_output_dir}/latex")
+        endif()
+        if (GENERATE_XML STREQUAL "YES")
+            list(APPEND _out "${_output_dir}/xml")
+        endif()
+        if (GENERATE_HTML STREQUAL "YES")
+            list(APPEND _out "${_output_dir}/html")
+        endif()
+        if (GENERATE_PDF)
+            list(APPEND _out "${_output_dir}/pdf")
+        endif()
+    endif ()
+
+    set(${_out_var} "${_out}" PARENT_SCOPE)
+endfunction()
+
+##############################################################################
+#.rst:
+# .. cmake:command:: _doxygen_list_inputs(_out_var)
+#
+# Collects input file names based on the value of input parameters that control
+# input sources:
+# * If ``INPUTS`` is not empty, collects all files in the paths given by
+# ``INPUTS``. Files are added to the resulting list directly, and directories
+# are globbed. Puts the resulting list into ``_out_var``.
+# * If ``INPUT_TARGET`` is not empty, takes include directories from
+# the corresponding target. Every directory is then globbed to get the files.
+# * If none of the above holds, an error is raised.
+#
+# Parameters:
+#
+# * ``_out_var`` the list of files in input sources
+##############################################################################
+function(_doxygen_list_inputs _out_var)
+    set(_all_inputs "")
+    if (INPUT)
+        foreach (_dir ${INPUT})
+            if (IS_DIRECTORY "${_dir}")
+                file(GLOB_RECURSE _inputs "${_dir}/*")
+                list(APPEND _all_inputs "${_inputs}")
+                log_debug(doxygen.list_inputs "appending directory contents: ${_inputs}")
+            else ()
+                list(APPEND _all_inputs "${_dir}")
+                log_debug(doxygen.list_inputs "appending a file ${_dir}")
+            endif ()
+        endforeach ()
+    elseif (INPUT_TARGET)
+        _doxygen_get_target_property(_type ${INPUT_TARGET} TYPE)
+        if (_type STREQUAL INTERFACE_LIBRARY)
+            _doxygen_get_target_property(_include_directories
+                    ${INPUT_TARGET}
+                    INTERFACE_INCLUDE_DIRECTORIES)
+        else()
+            _doxygen_get_target_property(_include_directories
+                    ${INPUT_TARGET}
+                    INCLUDE_DIRECTORIES)
+            log_debug(doxygen.list_inputs "include_directories of `${INPUT_TARGET}`: ${_include_directories}")
+        endif()
+        foreach (_dir ${_include_directories})
+            file(GLOB_RECURSE _inputs "${_dir}/*")
+            list(APPEND _all_inputs "${_inputs}")
+            log_debug(doxygen.list_inputs "appending ${_inputs} from ${_dir}")
+        endforeach ()
+    else ()
+        message(FATAL_ERROR [=[
+Either INPUT or INPUT_TARGET must be specified as input argument
+for `doxygen_add_docs`:
+1) INPUT_TARGET couldn't be defaulted to ${PROJECT_NAME};
+2) Input project file didn't specify any inputs either.]=])
+    endif ()
+
+    log_debug(doxygen.list_inputs "collected inputs: ${_all_inputs}")
+    set(${_out_var} "${_all_inputs}" PARENT_SCOPE)
+endfunction()
+
+function(_doxygen_collect_dependencies _out_var)
+    unset(_result)
+    if(LAYOUT_FILE)
+        log_debug(doxygen "LAYOUT_FILE ${LAYOUT_FILE} was supplied")
+        list(APPEND _result "${LAYOUT_FILE}")
+    endif()
+    if(HTML_EXTRA_STYLESHEET)
+        log_debug(doxygen "HTML_EXTRA_STYLESHEET ${HTML_EXTRA_STYLESHEET} was supplied")
+        list(APPEND _result "${HTML_EXTRA_STYLESHEET}")
+    endif()
+    if(HTML_FOOTER)
+        log_debug(doxygen "HTML_FOOTER ${HTML_FOOTER} was supplied")
+        list(APPEND _result "${HTML_FOOTER}")
+    endif()
+    if (HTML_HEADER)
+        log_debug(doxygen "HTML_HEADER ${HTML_HEADER} was supplied")
+        list(APPEND _result "${HTML_HEADER}")
+    endif()
+    if (HTML_EXTRA_FILES)
+        log_debug(doxygen "HTML_EXTRA_FILES ${HTML_EXTRA_FILES} was supplied")
+        separate_arguments(HTML_EXTRA_FILES)
+        foreach(_file ${HTML_EXTRA_FILES})
+            if (NOT IS_ABSOLUTE "${_file}")
+                list(APPEND _result "${CMAKE_CURRENT_SOURCE_DIR}/${_file}")
+            else()
+                list(APPEND _result "${_file}")
+            endif()
+        endforeach()
+    endif()
+    set(${_out_var} ${_result} PARENT_SCOPE)
+endfunction()
+
+function(_doxygen_load_project _project_file_name _out)
+    unset(_properties)
+    log_info(doxygen "Load the project file template ${_project_file_name}...")
+
+    file(STRINGS "${_project_file_name}" _file_lines)
+    foreach(_line IN LISTS _file_lines)
+        if(_line MATCHES "^([A-Z][A-Z0-9_]+)( *=)(.*)")
+            set(_key "${CMAKE_MATCH_1}")
+            set(_eql "${CMAKE_MATCH_2}")
+            set(_value "${CMAKE_MATCH_3}")
+            #string(REPLACE "\"" "\\\\\"" _value "${_value}")
+            #string(REPLACE "\\" "\\\\" _value "${_value}")
+            string(REPLACE ";" "\\\n" _value "${_value}")
+            string(STRIP ${_key} _key)
+            string(STRIP "${_value}" _value)
+            set(_key "${_key}")
+
+            set(${_key} "${_value}" PARENT_SCOPE)
+            list(APPEND _properties ${_key})
+        endif()
+    endforeach()
+    set(${_out} ${_properties} PARENT_SCOPE)
+endfunction()
+
+function(_doxygen_save_project _project_file_name)
+    assert_not_empty("${_project_file_name}")
+
+    unset(_contents)
+    foreach(_key IN LISTS ARGN)
+        string(APPEND _contents "${_key} = @${_key}@\n")
+
+        set(_value "${${_key}}")
+        # Remove the backslashes we had to preserve to handle newlines
+        string(REPLACE "\\\n" "\n" _value "${_value}")
+
+        string(SUBSTRING "${_value}" 0 1 _first_char)
+        string(FIND "${_value}" " " _ind)
+        string(FIND "${_value}" "\n" _multiline)
+
+        if (_ind GREATER -1 AND NOT _first_char STREQUAL "\"" AND _multiline EQUAL -1)
+            set(${_key} "\"${_value}\"")
+            set(${_key} "\"${_value}\"" PARENT_SCOPE)
+        endif()
+    endforeach()
+
+    log_info(doxygen "Save the project file template ${_project_file_name}.in ...")
+    file(WRITE "${_project_file_name}.in" "${_contents}")
+
+    log_info(doxygen "Save the project file ${_project_file_name} ...")
+    configure_file("${_project_file_name}.in" "${_project_file_name}" @ONLY)
+endfunction()
+
+macro(_doxygen_parse_inputs)
+    _doxygen_parse_input(
+            PROJECT_FILE
+            STRING
+            SETTER "set_project_file"
+            ${ARGN})
+    _doxygen_parse_input(INPUT_TARGET STRING SETTER "set_input_target" ${ARGN})
+    _doxygen_parse_input(DOCS_TARGET STRING UPDATER "update_docs_target" DEFAULT "${_input_target}.doxygen" ${ARGN})
+    _doxygen_parse_input(INSTALL_COMPONENT STRING DEFAULT docs ${ARGN})
+    _doxygen_parse_input(GENERATE_HTML STRING DEFAULT YES ${ARGN})
+    _doxygen_parse_input(GENERATE_PDF OPTION DEFAULT NO ${ARGN})
+    _doxygen_parse_input(WORKING_DIRECTORY STRING DEFAULT "${CMAKE_CURRENT_SOURCE_DIR}")
+endmacro()
+
+macro(_doxygen_property _index _name)
+    set(doxygen.${_name} ${ARGN})
+    list(APPEND ${_index} ${_name})
+endmacro()
+
+# _properties = project file
+macro(_doxygen_update_properties _properties)
+    unset(_specials)
+
+    _doxygen_property(_specials INPUT UPDATER "update_input_source")
+    _doxygen_property(_specials GENERATE_XML DEFAULT NO)
+    _doxygen_property(_specials GENERATE_LATEX
+            UPDATER "update_generate_latex"
+            DEFAULT NO)
+    _doxygen_property(_specials OUTPUT_DIRECTORY
+            UPDATER "update_output_dir"
+            DEFAULT "${CMAKE_CURRENT_BINARY_DIR}/doxygen-generated")
+
+    _doxygen_property(_specials HAVE_DOT SETTER "set_have_dot" OVERWRITE)
+    _doxygen_property(_specials DOT_PATH SETTER "set_dot_path" OVERWRITE)
+    _doxygen_property(_specials DIA_PATH SETTER "set_dia_path" OVERWRITE)
+    _doxygen_property(_specials EXAMPLE_PATH SETTER "set_example_source")
+    _doxygen_property(_specials WARN_FORMAT
+            SETTER "set_warn_format" OVERWRITE)
+    _doxygen_property(_specials MAKEINDEX_CMD_NAME
+            UPDATER "update_makeindex_cmd_name") # OVERWRITE)
+    _doxygen_property(_specials LATEX_CMD_NAME
+            UPDATER "update_latex_cmd_name")# OVERWRITE)
+
+    _doxygen_property(_specials PROJECT_BRIEF DEFAULT "${PROJECT_DESCRIPTION}" OVERWRITE)
+    _doxygen_property(_specials PROJECT_NAME DEFAULT "${PROJECT_NAME}" OVERWRITE)
+    _doxygen_property(_specials PROJECT_VERSION DEFAULT "${PROJECT_VERSION}" OVERWRITE)
+    _doxygen_property(_specials LATEX_BATCHMODE DEFAULT YES OVERWRITE)
+    _doxygen_property(_specials PDF_HYPERLINKS DEFAULT YES OVERWRITE)
+    _doxygen_property(_specials LATEX_OUTPUT DEFAULT "latex" OVERWRITE)
+    _doxygen_property(_specials USE_PDFLATEX DEFAULT YES OVERWRITE)
+
+    _doxygen_property(_specials HTML_OUTPUT DEFAULT "html" OVERWRITE)
+    _doxygen_property(_specials HTML_FILE_EXTENSION DEFAULT ".html" OVERWRITE)
+    _doxygen_property(_specials XML_OUTPUT DEFAULT "xml" OVERWRITE)
+    _doxygen_property(_specials RECURSIVE DEFAULT YES OVERWRITE)
+    _doxygen_property(_specials EXAMPLE_RECURSIVE DEFAULT YES OVERWRITE)
+
+    foreach(_property ${${_properties}})
+        if ("${${_property}}" STREQUAL "")
+            _doxygen_parse_input(${_property} STRING ${doxygen.${_property}} ${ARGN})
+        else()
+            _doxygen_parse_input(${_property} STRING ${doxygen.${_property}} PROJECT_VALUE "${${_property}}" ${ARGN})
+        endif()
+    endforeach()
+endmacro()
+
+function(_doxygen_parse_input _property _type)
+    set(_options OVERWRITE)
+    set(_one_value_args DEFAULT SETTER UPDATER PROJECT_VALUE)
+    set(_multi_value_args "")
+
+    cmake_parse_arguments(PARAM "${_options}" "${_one_value_args}" $"{_multi_value_args}" "${ARGN}")
+
+    unset(_one_value_args)
+    unset(_options)
+    unset(_multi_value_args)
+    if (_type STREQUAL STRING)
+        list(APPEND _one_value_args ${_property})
+    endif ()
+    if (_type STREQUAL OPTION)
+        list(APPEND _options ${_property})
+    endif ()
+    if (_type STREQUAL LIST)
+        list(APPEND _multi_value_args ${_property})
+    endif ()
+
+    cmake_parse_arguments(IN
+            "${_options}"
+            "${_one_value_args}"
+            "${_multi_value_args}"
+            "${ARGN}")
+
+    unset(_value)
+    if ("${IN_${_property}}" STREQUAL "")
+        list(APPEND _report "${_property} is not in the input arguments")
+        if (DEFINED PARAM_PROJECT_VALUE AND NOT PARAM_OVERWRITE)
+            list(APPEND _report "${_property} is set to the project value `${PARAM_PROJECT_VALUE}`")
+            set(_value "${PARAM_PROJECT_VALUE}")
+        else()
+            if (DEFINED PARAM_DEFAULT)
+                list(APPEND _report "${_property} is set to default `${PARAM_DEFAULT}`")
+                set(_value "${PARAM_DEFAULT}")
+            else()
+                if (DEFINED PARAM_SETTER)
+                    list(APPEND _report "${_property} will be set by `${PARAM_SETTER}`")
+                    _doxygen_call_setter(${PARAM_SETTER} _value)
+                endif()
+            endif ()
+        endif()
+        if (DEFINED PARAM_UPDATER)
+            list(APPEND _report "${_property}=${_value} will be updated by `${PARAM_UPDATER}`")
+            _doxygen_call_updater(${PARAM_UPDATER} "${_value}" _value)
+        endif()
+    else()
+        list(APPEND _report "${_property} was in the input arguments: `${IN_${_property}}`")
+        if (DEFINED PARAM_UPDATER)
+            list(APPEND _report "${_property}=`${IN_${_property}}` will be updated by `${PARAM_UPDATER}`")
+            _doxygen_call_updater(${PARAM_UPDATER} "${IN_${_property}}" _value)
+        else()
+            list(APPEND _report "${_property} has no updater, the input value wins")
+            set(_value "${IN_${_property}}")
+        endif()
+    endif()
+    list(APPEND _report "${_property} becomes `${_value}`")
+    foreach (_line IN LISTS _report)
+        log_trace(doxygen "${_line}")
+    endforeach()
+    set(${_property} "${_value}" PARENT_SCOPE)
+endfunction()
+
+function(_doxygen_call_setter _setter _out_var)
+    _doxygen_call_1(${_setter} _new_value)
+    set(${_out_var} "${_new_value}" PARENT_SCOPE)
+endfunction()
+
+function(_doxygen_call_updater _updater _current_value _out_var)
+    _doxygen_call_2(${_updater} "${_current_value}" _new_value)
+    set(${_out_var} "${_new_value}" PARENT_SCOPE)
+endfunction()
+
+macro(_doxygen_call_1 _id _arg1)
+    if (NOT COMMAND _doxygen_${_id})
+        message(FATAL_ERROR "Unsupported function/macro \"${_id}\"")
+    else ()
+        dynamic_call(_doxygen_${_id} "${_arg1}")
+    endif ()
+endmacro()
+
+macro(_doxygen_call_2 _id _arg1 _arg2)
+    if (NOT COMMAND _doxygen_${_id})
+        message(FATAL_ERROR "Unsupported function/macro \"${_id}\"")
+    else ()
+        dynamic_call(_doxygen_${_id} "${_arg1}" "${_arg2}")
+    endif ()
+endmacro()
+
+##############################################################################
+#.rst:
+# .. cmake:command:: _doxygen_output_project_file_name
+#
+# ..  code-block:: cmake
+#
+#   _doxygen_output_project_file_name(_project_file_name _out_var)
+#
+# Generates an output project file's name, given the input name.
+# Replaces th path to input project file ``_project_file_name`` by
+# *CMAKE_CURRENT_BINARY_DIR* while leaving the file name unchanged.
+##############################################################################
+function(_doxygen_output_project_file_name _project_file_name _out_var)
+    assert_not_empty("${_project_file_name}")
+    get_filename_component(_name "${_project_file_name}" NAME)
+    if (_name STREQUAL "Doxyfile.in")
+        set(_name "Doxyfile")
+    endif()
+    set(${_out_var} "${CMAKE_CURRENT_BINARY_DIR}/${_name}" PARENT_SCOPE)
+endfunction()
+
+##############################################################################
+#.rst:
+#
+# .. cmake:command:: _doxygen_find_directory
+#
+# .. code-block:: cmake
+#
+#   _doxygen_find_directory(_base_dir _names _out_var)
+#
+# Searches for a directory with a name from ``_names``, starting from
+# ``_base_dir``. Sets the output variable ``_out_var`` to contain absolute
+# path of every found directory.
+##############################################################################
+function(_doxygen_find_directory _base_dir _names _out_var)
+    set(_result "")
+    foreach (_name ${_names})
+        string(SUBSTRING "${_base_dir}" 0 1 _first_char)
+        if (_first_char STREQUAL "\"")
+            # insert _name inside the quotes
+            string(LENGTH ${_base_dir} _len)
+            math(EXPR _len "${_len} - 2")
+            string(SUBSTRING ${_base_dir} 1 ${_len} _new_base_dir)
+            set(_search_path "${_new_base_dir}/${_name}")
+        else()
+            set(_search_path ${_base_dir}/${_name})
+        endif()
+        if (IS_DIRECTORY "${_search_path}")
+            log_debug(doxygen-cmake "Found directory ${_search_path}")
+            list(APPEND _result ${_search_path})
+        endif ()
+    endforeach ()
+    set(${_out_var} "${_result}" PARENT_SCOPE)
+endfunction()
+
+##############################################################################
+#.rst:
+# Setters and updaters
+# --------------------
+#
+# These functions implement property update logic:
+#
+# * relative directory names are converted into absolute ones;
+# * properties derived by `CMake` are updated from the corresponding variables
+#   and targets.
+#
+# These functions are never called directly; they are configured to participate
+# in the property :ref:`transformation<Project file generator>` process.
+##############################################################################
+
+##############################################################################
+#.rst:
+# .. cmake:command:: _doxygen_set_dia_path
+#
+# ..  code-block:: cmake
+#
+#    _doxygen_set_dia_path(_out_var)
+#
+# Sets the ``dot.dia-path`` configuration property. Puts the result into
+# ``_out_var``.
+##############################################################################
+function(_doxygen_set_dia_path _out_var)
+    if (TARGET Doxygen::dia)
+        get_target_property(DIA_PATH Doxygen::dia IMPORTED_LOCATION)
+        set(${_out_var} "${DIA_PATH}" PARENT_SCOPE)
+    endif ()
+endfunction()
+
+##############################################################################
+#.rst:
+# .. cmake:command:: _doxygen_set_latex_cmd_name
+#
+# ..  code-block:: cmake
+#
+#    _doxygen_set_latex_cmd_name(_out_var)
+#
+# Sets the property ``output-latex.latex-cmd-name`` to the value of
+# ``PDFLATEX_COMPILER``, previously configured by ``find_package(LATEX)``.
+# Puts the result into ``_out_var``.
+##############################################################################
+function(_doxygen_update_latex_cmd_name _latex_cmd_name _out_var)
+    find_package(LATEX QUIET OPTIONAL_COMPONENTS MAKEINDEX PDFLATEX)
+    if (NOT "${PDFLATEX_COMPILER}" STREQUAL PDFLATEX_COMPILER-NOTFOUND)
+        set(${_out_var} "${PDFLATEX_COMPILER}" PARENT_SCOPE)
+    else ()
+        if (LATEX_FOUND)
+            set(${_out_var} "${LATEX_COMPILER}" PARENT_SCOPE)
+        else ()
+            set(${_out_var} "${_latex_cmd_name}" PARENT_SCOPE)
+        endif ()
+    endif ()
+endfunction()
+
+##############################################################################
+#.rst:
+# .. cmake:command:: _doxygen_update_makeindex_cmd_name
+#
+# ..  code-block:: cmake
+#
+#    _doxygen_set_makeindex_cmd_name(_out_var)
+#
+# Sets ``output-latex.makeindex-cmd-name`` to the value of
+# `MAKEINDEX_COMPILER` set by `find_package(LATEX)`. Puts the result into
+# ``_out_var``.
+##############################################################################
+function(_doxygen_update_makeindex_cmd_name _cmd_name _out_var)
+    if (NOT "${MAKEINDEX_COMPILER}" STREQUAL "MAKEINDEX_COMPILER-NOTFOUND")
+        set(${_out_var} "${MAKEINDEX_COMPILER}" PARENT_SCOPE)
+    else()
+        set(${_out_var} "${_cmd_name}" PARENT_SCOPE)
+    endif ()
+endfunction()
+
+function(_doxygen_set_project_file _out_var)
+    set(_template "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile.in")
+    if (NOT EXISTS "${_template}")
+        log_debug(doxygen "Create default project `Doxyfile.in` in `${CMAKE_CURRENT_BINARY_DIR}`")
+        execute_process(
+                COMMAND ${DOXYGEN_EXECUTABLE} -s -g "${_template}"
+                OUTPUT_QUIET
+                RESULT_VARIABLE _doxygen_tpl_result)
+    endif()
+    set(${_out_var} "${_template}" PARENT_SCOPE)
+endfunction()
+
+##############################################################################
+#.rst:
+# .. cmake:command:: _doxygen_set_input_target
+#
+# .. code-block:: cmake
+#
+#   _doxygen_set_input_target(_out_var)
+#
+# Sets the output variable ``_out_var`` to ``${PROJECT_NAME}`` if a target with
+# that name exists. Clears the output variable otherwise.
+##############################################################################
+function(_doxygen_set_input_target _out_var)
+    if (TARGET ${PROJECT_NAME})
+        set(${_out_var} ${PROJECT_NAME} PARENT_SCOPE)
+    else ()
+        set(${_out_var} "" PARENT_SCOPE)
+    endif ()
+endfunction()
+
+##############################################################################
+#.rst:
+# .. cmake:command:: _doxygen_set_warn_format
+#
+# .. code-block:: cmake
+#
+#   _doxygen_set_warn_format(_out_var)
+#
+# Sets the value of the configuration property ``messages.warn-format``
+# depending on the current build tool. Puts the result into ``_out_var``.
+##############################################################################
+function(_doxygen_set_warn_format _out_var)
+    if ("${CMAKE_BUILD_TOOL}" MATCHES "(msdev|devenv)")
+        set(${_out_var} [[$file($line) : $text]] PARENT_SCOPE)
+    else ()
+        set(${_out_var} [[$file:$line: $text]] PARENT_SCOPE)
+    endif ()
+endfunction()
+
+##############################################################################
+#.rst:
+# .. cmake:command:: _doxygen_set_dot_path
+#
+# .. code-block:: cmake
+#
+#   _doxygen_set_dot_path(_out_var)
+#
+# Sets the ``dot.dot-path`` configuration property. Uses result of the call
+# ``find_package(Doxygen)``. Puts the result into ``_out_var``.
+##############################################################################
+function(_doxygen_set_dot_path _out_var)
+    if (TARGET Doxygen::dot)
+        get_target_property(DOT_PATH Doxygen::dot IMPORTED_LOCATION)
+        set(${_out_var} "${DOT_PATH}" PARENT_SCOPE)
+    endif ()
+endfunction()
+
+##############################################################################
+#.rst:
+# .. cmake:command:: _doxygen_update_input_source
+#
+# .. code-block:: cmake
+#
+#   _doxygen_update_input_source(<directories> <output variable>)
+#
+# Walks through directory paths ``_paths`` and updates relative
+# ones by prepending ``CMAKE_CURRENT_SOURCE_DIR``. Does nothing
+# to absolute directory paths. Writes updated list to ``_out_var``.
+##############################################################################
+function(_doxygen_update_input_source _paths _out_var)
+    set(_inputs "")
+    if (_paths)
+        separate_arguments(_paths)
+        foreach (_path ${_paths})
+            list(APPEND _inputs "${_path}")
+        endforeach ()
+    else ()
+        if (TARGET ${INPUT_TARGET})
+            _doxygen_get_target_property(_type ${INPUT_TARGET} TYPE)
+            if (_type STREQUAL "INTERFACE_LIBRARY")
+                _doxygen_get_target_property(_inputs
+                        "${INPUT_TARGET}"
+                        INTERFACE_INCLUDE_DIRECTORIES)
+            else()
+                _doxygen_get_target_property(_inputs
+                        "${INPUT_TARGET}"
+                        INCLUDE_DIRECTORIES)
+            endif()
+        endif ()
+    endif ()
+
+    set(_result "")
+    foreach(_input ${_inputs})
+        string(REGEX MATCH "\\$<BUILD_INTERFACE:(.*)?>" _input_copy1 "${_input}")
+        set(_input_copy1 "${CMAKE_MATCH_1}")
+        string(REGEX MATCH "\\$<INSTALL_INTERFACE:(.*)?>" _input_copy2 "${_input}")
+        set(_input_copy2 "${CMAKE_MATCH_1}")
+        if (_input_copy1)
+            file(GLOB_RECURSE _inputs ${_input_copy1}/*)
+            list(APPEND _result "${_inputs}")
+        elseif(NOT _input_copy2)
+            list(APPEND _result "${_input}")
+        endif()
+    endforeach()
+    #message(STATUS "input sources after update: ${_result}")
+    set(${_out_var} "${_result}" PARENT_SCOPE)
+endfunction()
+
+##############################################################################
+#.rst:
+# .. cmake:command:: _doxygen_update_output_dir
+#
+# .. code-block:: cmake
+#
+#   _doxygen_update_output_dir(_directory _out_var)
+#
+# Updates a given output directory ``_directory``:
+#
+# * a relative directory path is converted into an absolute one by prepending
+#   *CMAKE_CURRENT_BINARY_DIR*;
+# * an absolute path stays unchanged. Puts the result into ``_out_var``.
+##############################################################################
+function(_doxygen_update_output_dir _directory _out_var)
+    log_debug(_doxygen_update_output_dir "_directory=${_directory}")
+    if (_directory)
+        if (NOT IS_ABSOLUTE "${_directory}")
+            get_filename_component(_dir "${_directory}"
+                    ABSOLUTE
+                    BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+            set(${_out_var} "${_dir}" PARENT_SCOPE)
+        else()
+            set(${_out_var} "${_directory}" PARENT_SCOPE)
+        endif ()
+    endif ()
+endfunction()
+
+##############################################################################
+#.rst:
+# .. cmake:command:: _doxygen_set_have_dot
+#
+# .. code-block:: cmake
+#
+#   _doxygen_set_have_dot(_out_var)
+#
+# Sets ``dot.have-dot`` configuration flag depending on `Graphviz` ``dot``
+# presence. Uses the results of the ``find_package(DoxygenCMake)`` call.
+# Puts the result into ``_out_var``.
+##############################################################################
+function(_doxygen_set_have_dot _out_var)
+    if (TARGET Doxygen::dot)
+        set(${_out_var} YES PARENT_SCOPE)
+    else ()
+        set(${_out_var} NO PARENT_SCOPE)
+    endif ()
+endfunction()
+
+##############################################################################
+#.rst:
+# .. cmake:command:: _doxygen_set_example_source
+#
+# .. code-block:: cmake
+#
+#   _doxygen_set_example_source(_out_var)
+#
+# Setter for the property ``input.example-source``. Searches for
+# the sub-directories  [``example``, ``examples``] in the current source
+# directory, and collects found ones. Puts the result into ``_out_var``.
+##############################################################################
+function(_doxygen_set_example_source _out_var)
+    _doxygen_find_directory(
+            "${CMAKE_CURRENT_SOURCE_DIR}"
+            "example;examples"
+            _example_path
+    )
+    set(${_out_var} "${_example_path}" PARENT_SCOPE)
+endfunction()
+
+##############################################################################
+#.rst:
+# .. cmake:command:: _doxygen_update_docs_target
+#
+# .. code-block:: cmake
+#
+#   _doxygen_update_docs_target(_out_var)
+#
+# Sets the ``DOCS_TARGET`` parameter when it was not given explicitly:
+#
+# * if ``INPUT_TARGET`` is not empty, sets it to ``${INPUT_TARGET}.doxygen``;
+# * otherwise, sets it to ``${PROJECT_NAME}``
+#
+# Puts the result into ``_out_var``.
+##############################################################################
+function(_doxygen_update_docs_target _target _out_var)
+    if (${_target} STREQUAL ".doxygen")
+        set(${_out_var} "${PROJECT_NAME}.doxygen" PARENT_SCOPE)
+    else()
+        set(${_out_var} ${_target} PARENT_SCOPE)
+    endif()
+endfunction()
+
+##############################################################################
+#.rst:
+# .. cmake:command:: _doxygen_update_generate_latex
+#
+# .. code-block:: cmake
+#
+#   _doxygen_update_generate_latex(_generate_latex _out_var)
+#
+# If ``.tex`` generation was requested (``_generate_latex`` is ``true``), but
+# no LATEX was found in the local environment, ``_out_var`` is set to ``false``.
+# Otherwise, it's set to ``true``.
+##############################################################################
+macro(_doxygen_update_generate_latex _generate_latex _out_var)
+    if ("${_generate_latex}" STREQUAL YES)
+        if (NOT DEFINED LATEX_FOUND)
+            log_info(doxygen.updaters "LaTex docs requested, importing LATEX...")
+            find_package(LATEX QUIET OPTIONAL_COMPONENTS MAKEINDEX PDFLATEX)
+            #doxygen_global_set(LATEX_FOUND ${LATEX_FOUND})
+        endif()
+        if (NOT LATEX_FOUND)
+            log_info(doxygen.updaters "LATEX was not found; skip LaTex generation.")
+            set(_generate_latex NO)
+        endif()
+    endif()
+    set(${_out_var} ${_generate_latex})
+endmacro()
+
 ##############################################################################
 #.rst:
 # -------
@@ -356,4 +1320,3 @@ option(DOXYGEN_INSTALL_DOCS "Install generated documentation" OFF)
 ##############################################################################
 option(DOXYGEN_OPEN_TARGETS
         "Add open targets for the generated documentation" ON)
-

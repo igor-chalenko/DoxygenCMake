@@ -10,3 +10,4 @@ macro(_doxygen_find_package _name)
 endmacro()
 
 include(${DOXYGEN_CMAKE_MODULE_DIR}/find-doxygen-cmake.cmake)
+

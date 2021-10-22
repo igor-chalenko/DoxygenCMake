@@ -1,3 +1,11 @@
+get_filename_component(_current_dir ${CMAKE_CURRENT_LIST_FILE} PATH)
+set_property(GLOBAL PROPERTY current.dir "${_current_dir}")
+
+include(${_current_dir}/Obtain.cmake)
+
+add_to_registry(self "${doxygen.cmake.path}")
+import(self::add-docs)
+
 # overrides
 function(_doxygen_get_target_property _out_var _target _property)
     global_get(add.target.${_target} ${_property} _value)

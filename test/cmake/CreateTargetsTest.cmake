@@ -1,9 +1,6 @@
-# suppress the warning coming from empty arch check `if("TRUE)`
-cmake_policy(SET CMP0012 NEW)
 set(_project_source_dir "${CMAKE_CURRENT_BINARY_DIR}/../..")
 
-include(${_project_source_dir}/test/cmake/FindPackageWrapper.cmake)
-include(${_project_source_dir}/cmake/add-docs.cmake)
+set(_project_source_dir "${doxygen.cmake.path}/..")
 include(${_project_source_dir}/test/cmake/CommonTest.cmake)
 
 function(test_create_targets)
@@ -16,6 +13,8 @@ function(test_create_targets)
     create_mock_target(main EXECUTABLE)
     set(INPUT_TARGET main)
     set(DOCS_TARGET "doxygen_docs")
+    set(_project_source_dir "${CMAKE_CURRENT_BINARY_DIR}/../..")
+
     set(PROJECT_FILE ${_project_source_dir}/test/cmake/Doxyfile2)
     configure_file(${_project_source_dir}/test/cmake/Doxyfile2
             ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile2 @ONLY)
