@@ -1,6 +1,6 @@
-set(_project_source_dir "${CMAKE_CURRENT_BINARY_DIR}/../..")
+cmake_minimum_required(VERSION 3.19)
 
-include(${_project_source_dir}/cmake/add-docs.cmake)
+set(_project_source_dir "${doxygen.cmake.path}/..")
 include(${_project_source_dir}/test/cmake/CommonTest.cmake)
 
 function(add_docs_test)

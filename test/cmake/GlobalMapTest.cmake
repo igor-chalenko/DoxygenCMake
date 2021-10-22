@@ -1,5 +1,7 @@
-set(_project_source_dir "${CMAKE_CURRENT_BINARY_DIR}/../..")
-include(${_project_source_dir}/cmake/add-docs.cmake)
+cmake_minimum_required(VERSION 3.19)
+
+get_filename_component(_current_dir ${CMAKE_CURRENT_LIST_FILE} PATH)
+include(${_current_dir}/CommonTest.cmake)
 
 function(test_get_set_append)
     doxygen_global_set(property "value")
