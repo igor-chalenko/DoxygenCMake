@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.19)
 
-set(_project_source_dir "${doxygen.cmake.path}/..")
-include(${_project_source_dir}/test/cmake/CommonTest.cmake)
+include(${doxygen.cmake.path}/../test/cmake/CommonTest.cmake)
 
 function(test_get_set_append)
     doxygen_global_set(property "value")

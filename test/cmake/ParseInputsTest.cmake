@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 
 set(_project_source_dir "${doxygen.cmake.path}/..")
-include(${_project_source_dir}/test/cmake/CommonTest.cmake)
+include(${doxygen.cmake.path}/../test/cmake/CommonTest.cmake)
 
 #log_level(doxygen-cmake DEBUG)
 # there's no project name in the script mode
