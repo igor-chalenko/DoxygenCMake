@@ -7,7 +7,7 @@ if (TARGET Doxygen::doxygen)
 
     find_package_handle_standard_args(
             doxygen-cmake
-            REQUIRED_VARS PACKAGE_PREFIX_DIR
+            REQUIRED_VARS DOXYGEN_CMAKE_MODULE_DIR
             VERSION_VAR DOXYGEN_CMAKE_VERSION
     )
     include(${DOXYGEN_CMAKE_MODULE_DIR}/add-docs.cmake)
