@@ -10,7 +10,7 @@ if (TARGET Doxygen::doxygen)
             REQUIRED_VARS DOXYGEN_CMAKE_MODULE_DIR
             VERSION_VAR DOXYGEN_CMAKE_VERSION
     )
-    include(${DOXYGEN_CMAKE_MODULE_DIR}/add-docs.cmake)
+    include(${DOXYGEN_CMAKE_MODULE_DIR}/add-doxygen-targets.cmake)
 else()
     message(STATUS "Doxygen is not installed, doxygen-cmake is disabled.")
 endif()

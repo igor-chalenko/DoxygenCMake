@@ -896,30 +896,14 @@ function(_doxygen_parse_input _property _type)
 endfunction()
 
 function(_doxygen_call_setter _setter _out_var)
-    _doxygen_call_1(${_setter} _new_value)
+    dynamic_call(_doxygen_${_setter} _new_value)
     set(${_out_var} "${_new_value}" PARENT_SCOPE)
 endfunction()
 
 function(_doxygen_call_updater _updater _current_value _out_var)
-    _doxygen_call_2(${_updater} "${_current_value}" _new_value)
+    dynamic_call(_doxygen_${_updater} "${_current_value}" _new_value)
     set(${_out_var} "${_new_value}" PARENT_SCOPE)
 endfunction()
-
-macro(_doxygen_call_1 _id _arg1)
-    if (NOT COMMAND _doxygen_${_id})
-        message(FATAL_ERROR "Unsupported function/macro \"${_id}\"")
-    else ()
-        dynamic_call(_doxygen_${_id} "${_arg1}")
-    endif ()
-endmacro()
-
-macro(_doxygen_call_2 _id _arg1 _arg2)
-    if (NOT COMMAND _doxygen_${_id})
-        message(FATAL_ERROR "Unsupported function/macro \"${_id}\"")
-    else ()
-        dynamic_call(_doxygen_${_id} "${_arg1}" "${_arg2}")
-    endif ()
-endmacro()
 
 ##############################################################################
 #.rst:
