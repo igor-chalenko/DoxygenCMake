@@ -12,9 +12,7 @@ the documentation at [Read the Docs](https://readthedocs.io/).
 
 Files
 -----
-* `add-docs.cmake`, `cmake-target-generators.cmake`, 
-  `find-doxygen-cmake.cmake`,  `project-functions.cmake`, 
-  `property-handlers.cmake`
+* `add-docs.cmake`, `find-doxygen-cmake.cmake`,  `overridable.cmake` 
 
   The package files.
 
