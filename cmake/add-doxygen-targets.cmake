@@ -1039,14 +1039,13 @@ function(_doxygen_update_makeindex_cmd_name _cmd_name _out_var)
 endfunction()
 
 function(_doxygen_set_project_file _out_var)
-    set(_template "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile.in")
-    if (NOT EXISTS "${_template}")
-        log_debug(doxygen "Create default project `Doxyfile.in` in `${CMAKE_CURRENT_BINARY_DIR}`")
-        execute_process(
-                COMMAND ${DOXYGEN_EXECUTABLE} -s -g "${_template}"
-                OUTPUT_QUIET
-                RESULT_VARIABLE _doxygen_tpl_result)
-    endif()
+    string(RANDOM LENGTH 4 _random)
+    set(_template "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile${_random}.in")
+    log_debug(doxygen "Create default project `${}_template` in `${CMAKE_CURRENT_BINARY_DIR}`")
+    execute_process(
+            COMMAND ${DOXYGEN_EXECUTABLE} -s -g "${_template}"
+            OUTPUT_QUIET
+            RESULT_VARIABLE _doxygen_tpl_result)
     set(${_out_var} "${_template}" PARENT_SCOPE)
 endfunction()
 
