@@ -1039,8 +1039,9 @@ function(_doxygen_update_makeindex_cmd_name _cmd_name _out_var)
 endfunction()
 
 function(_doxygen_set_project_file _out_var)
-    string(RANDOM LENGTH 4 _random)
-    set(_template "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile${_random}.in")
+    string(MD5 _hash ${PROJECT_NAME})
+    string(SUBSTRING ${_hash} 0 4 _hash)
+    set(_template "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile${_hash}.in")
     log_debug(doxygen "Create default project `${}_template` in `${CMAKE_CURRENT_BINARY_DIR}`")
     execute_process(
             COMMAND ${DOXYGEN_EXECUTABLE} -s -g "${_template}"

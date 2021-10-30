@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.19)
+
 set(_project_source_dir "${CMAKE_CURRENT_BINARY_DIR}/../..")
 
 set(_project_source_dir "${doxygen.cmake.path}/..")
