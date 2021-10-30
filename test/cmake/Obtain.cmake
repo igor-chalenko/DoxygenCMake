@@ -1,5 +1,7 @@
 macro(obtain _name)
-    find_package(${_name} QUIET ${ARGN})
+    find_package(${_name} REQUIRED ${ARGN})
+    message(STATUS "${_name}_DIR = ${${_name}_DIR}")
+    add_to_registry(${_name} "${${_name}_DIR}")
 endmacro()
 
 macro(add_to_registry _module _path)

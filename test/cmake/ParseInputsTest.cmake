@@ -19,7 +19,9 @@ endfunction()
 
 function(test_input_target)
     _doxygen_parse_inputs(INPUT_TARGET main)
-    assert_same(${PROJECT_FILE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile.in)
+    if (NOT PROJECT_FILE MATCHES "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile(.+).in")
+        assert_fail("wrong project file name")
+    endif()
     assert_same(${INPUT_TARGET} main)
 endfunction()
 
