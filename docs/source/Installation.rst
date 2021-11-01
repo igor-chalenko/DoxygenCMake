@@ -7,14 +7,14 @@ package with one dependency:
 
 .. code-block:: bash
 
-  git clone https://github.com/igor-chalenko/cmake-utilities.git
-  cd cmake-utilities
+  git clone https://github.com/igor-chalenko/CMakeUtilities.git
+  cd CMakeUtilities
   mkdir build && cd build
   cmake ..
   make test
   sudo make install
   cd ../..
-  git clone https://github.com/igor-chalenko/doxygen-cmake.git
+  git clone https://github.com/igor-chalenko/DoxygenCMake.git
   mkdir build && cd build
   cmake ..
   make test

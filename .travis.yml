@@ -15,8 +15,8 @@ before_install:
   - sudo apt install cmake
 script:
   - /usr/bin/cmake --version
-  - git clone https://github.com/igor-chalenko/cmake-utilities.git
-  - cd cmake-utilities
+  - git clone https://github.com/igor-chalenko/CMakeUtilities.git
+  - cd CMakeUtilities
   - mkdir build && cd build
   - /usr/bin/cmake ..
   - make test
