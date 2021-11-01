@@ -13,7 +13,7 @@ the documentation at [Read the Docs](https://readthedocs.io/).
 
 Files
 -----
-* `add-docs.cmake`, `find-doxygen-cmake.cmake`,  `overridable.cmake` 
+* `AddDoxygenTargets.cmake`, `FindDoxygenCMake.cmake`,  `Overridable.cmake` 
 
   The package files.
 

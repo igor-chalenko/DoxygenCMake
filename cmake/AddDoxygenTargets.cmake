@@ -14,7 +14,7 @@ import(cmake-utilities::DynamicFunctions)
 parameter_to_function_prefix(doxygen global_get global_set
         global_unset global_append global_clear global_index)
 
-include(${_doxygen_dir}/overridable.cmake)
+include(${_doxygen_dir}/Overridable.cmake)
 
 ##############################################################################
 #.rst:
