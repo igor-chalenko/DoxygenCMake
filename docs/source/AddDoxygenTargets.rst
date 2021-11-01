@@ -1,0 +1,1 @@
+.. cmake-module:: ../../cmake/AddDoxygenTargets.cmake

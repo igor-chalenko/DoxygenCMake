@@ -972,7 +972,7 @@ endfunction()
 #   and targets.
 #
 # These functions are never called directly; they are configured to participate
-# in the property :ref:`transformation<Project file generator>` process.
+# in the property :ref:`transformation<algorithm-reference-label>` process.
 ##############################################################################
 
 ##############################################################################

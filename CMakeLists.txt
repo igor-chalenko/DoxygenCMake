@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.3)
-project(doxygen-cmake VERSION 0.1 DESCRIPTION "Doxygen module for CMake")
+project(DoxygenCMake VERSION 0.1 DESCRIPTION "Doxygen module for CMake")
 
 if (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME)
     include(cmake/3rd-party/InstallBasicPackageFiles.cmake)
@@ -30,7 +30,6 @@ if (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME)
                 VERSION ${PROJECT_VERSION}
                 COMPATIBILITY AnyNewerVersion
                 ARCH_INDEPENDENT
-                LOWERCASE_FILENAMES
                 NO_EXPORT
                 EXTRA_PATH_VARS_SUFFIX MODULE_DIR
                 NO_CHECK_REQUIRED_COMPONENTS_MACRO)
@@ -39,7 +38,7 @@ if (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME)
     # slash at the end removes `cmake` from the directory structure
     install(DIRECTORY "cmake/"
             DESTINATION ${_DESTINATION}
-            PATTERN cmake/3rd-party/InstallBasicPackageFiles.cmake EXCLUDE)
+            PATTERN cmake/3rd-party EXCLUDE)
 else()
     set(PACKAGE_PREFIX_DIR "${PROJECT_SOURCE_DIR}")
 endif()

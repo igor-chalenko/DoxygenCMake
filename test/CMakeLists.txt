@@ -1,4 +1,4 @@
-project(doxygen-cmake-test VERSION 0.1)
+project(DoxygenCMakeTest VERSION 0.1)
 
 add_executable(main src/main.cc)
 set_target_properties(main PROPERTIES EXCLUDE_FROM_ALL 1)
