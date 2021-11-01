@@ -18,7 +18,6 @@ function(test_project_file)
 endfunction()
 
 function(test_input_target)
-    log_level(doxygen TRACE)
     _doxygen_parse_inputs(INPUT_TARGET main)
     if (NOT PROJECT_FILE MATCHES "(.*)/Doxyfile(.+).in")
         assert_fail("wrong project file name")

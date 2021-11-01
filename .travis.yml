@@ -25,3 +25,4 @@ script:
   - mkdir build && cd build
   - /usr/bin/cmake ..
   - make test
+  - cat Testing/Temporary/LastTest.log
