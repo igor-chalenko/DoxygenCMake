@@ -6,11 +6,11 @@ if (TARGET Doxygen::doxygen)
     set(DOXYGEN_CMAKE_VERSION 0.1)
 
     find_package_handle_standard_args(
-            doxygen-cmake
+            DoxygenCMake
             REQUIRED_VARS DOXYGEN_CMAKE_MODULE_DIR
             VERSION_VAR DOXYGEN_CMAKE_VERSION
     )
-    include(${DOXYGEN_CMAKE_MODULE_DIR}/add-doxygen-targets.cmake)
+    include(${DOXYGEN_CMAKE_MODULE_DIR}/AddDoxygenTargets.cmake)
 else()
     message(STATUS "Doxygen is not installed, doxygen-cmake is disabled.")
 endif()

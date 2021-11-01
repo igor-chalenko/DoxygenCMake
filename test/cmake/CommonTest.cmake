@@ -4,7 +4,7 @@ set_property(GLOBAL PROPERTY current.dir "${_current_dir}")
 include(${_current_dir}/Obtain.cmake)
 
 add_to_registry(self "${doxygen.cmake.path}")
-import(self::add-doxygen-targets)
+import(self::AddDoxygenTargets)
 
 # overrides
 function(_doxygen_get_target_property _out_var _target _property)

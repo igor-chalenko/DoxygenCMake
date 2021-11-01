@@ -7,14 +7,14 @@
 
 get_filename_component(_doxygen_dir ${CMAKE_CURRENT_LIST_FILE} PATH)
 
-import(cmake-utilities::Testing)
-import(cmake-utilities::Logging)
-import(cmake-utilities::DynamicFunctions)
+import(CMakeUtilities::Testing)
+import(CMakeUtilities::Logging)
+import(CMakeUtilities::DynamicFunctions)
 
 parameter_to_function_prefix(doxygen global_get global_set
         global_unset global_append global_clear global_index)
 
-include(${_doxygen_dir}/overridable.cmake)
+include(${_doxygen_dir}/Overridable.cmake)
 
 ##############################################################################
 #.rst:
@@ -972,7 +972,7 @@ endfunction()
 #   and targets.
 #
 # These functions are never called directly; they are configured to participate
-# in the property :ref:`transformation<Project file generator>` process.
+# in the property :ref:`transformation<algorithm-reference-label>` process.
 ##############################################################################
 
 ##############################################################################

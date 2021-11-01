@@ -1,5 +1,5 @@
-doxygen-cmake
-=============
+DoxygenCMake
+============
 
 This is a CMake_ package that implements a convenient way of running Doxygen_.
 
@@ -18,14 +18,14 @@ This is a CMake_ package that implements a convenient way of running Doxygen_.
    :maxdepth: 2
    :caption: Public API
 
-   add-docs
+   AddDoxygenTargets
 
 .. toctree::
    :maxdepth: 2
    :caption: Additional info
 
-   changelog
-   license
+   ChangeLog
+   License
 
 Indices and tables
 ==================

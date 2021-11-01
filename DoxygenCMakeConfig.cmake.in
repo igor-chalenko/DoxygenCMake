@@ -1,7 +1,7 @@
 @PACKAGE_INIT@
 
-get_filename_component(doxygen_dir ${CMAKE_CURRENT_LIST_FILE} PATH)
-set_and_check(DOXYGEN_CMAKE_MODULE_DIR "${doxygen_dir}")
+get_filename_component(doxygen_cmake_dir ${CMAKE_CURRENT_LIST_FILE} PATH)
+set_and_check(DOXYGEN_CMAKE_MODULE_DIR "${doxygen_cmake_dir}")
 list(APPEND DOXYGEN_CMAKE_MODULE_PATH "${DOXYGEN_CMAKE_MODULE_DIR}")
 list(APPEND CMAKE_MODULE_PATH "${DOXYGEN_CMAKE_MODULE_PATH}")
 
@@ -30,5 +30,5 @@ macro(import _module)
     endif()
 endmacro()
 
-include(${DOXYGEN_CMAKE_MODULE_DIR}/find-doxygen-cmake.cmake)
+include(${DOXYGEN_CMAKE_MODULE_DIR}/FindDoxygenCMake.cmake)
 
