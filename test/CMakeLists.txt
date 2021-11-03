@@ -1,9 +1,5 @@
 project(DoxygenCMakeTest VERSION 0.1)
 
-add_executable(main src/main.cc)
-set_target_properties(main PROPERTIES EXCLUDE_FROM_ALL 1)
-target_include_directories(main PUBLIC include include5)
-
 add_test(
         NAME global_map_test
         COMMAND ${CMAKE_COMMAND}
