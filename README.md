@@ -8,7 +8,7 @@ What is it
 This is a CMake package that makes it easy to set up API documentation
 generation via
 [Doxygen](https://github.com/doxygen/doxygen).
-[Read](https://doxygen-cmake.readthedocs.io/en/latest/index.html)
+[Read](https://doxygencmake.readthedocs.io/en/latest/index.html)
 the documentation at [Read the Docs](https://readthedocs.io/).
 
 Files
