@@ -1,5 +1,5 @@
 # DoxygenCMake
-[![Build Status](https://app.travis-ci.com/igor-chalenko/doxygen-cmake.svg?branch=master)](https://app.travis-ci.com/igor-chalenko/doxygen-cmake)
+[![Build Status](https://app.travis-ci.com/igor-chalenko/doxygen-cmake.svg?branch=master)](https://app.travis-ci.com/igor-chalenko/doxygencmake)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 What is it
